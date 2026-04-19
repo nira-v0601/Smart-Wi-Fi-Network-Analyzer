@@ -97,7 +97,7 @@ class _NetworksScreenState extends State<NetworksScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withOpacity(0.05)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [

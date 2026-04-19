@@ -93,7 +93,7 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.primary.withOpacity(0.3), width: 10),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), width: 10),
               ),
               child: Center(
                 child: Column(

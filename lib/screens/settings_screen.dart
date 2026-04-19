@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: const Text('Dark Mode'),
                 trailing: Switch(
                   value: themeProvider.isDarkMode,
-                  activeColor: AppTheme.secondary,
+                  activeTrackColor: AppTheme.secondary,
                   onChanged: (value) {
                     themeProvider.toggleTheme(value);
                   },

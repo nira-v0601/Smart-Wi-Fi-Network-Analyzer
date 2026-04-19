@@ -21,7 +21,6 @@ class AppTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: background,
       colorScheme: const ColorScheme.dark(
-        background: background,
         surface: surfaceContainer,
         primary: primary,
         secondary: secondary,
@@ -50,8 +49,8 @@ class AppTheme {
         labelSmall: GoogleFonts.spaceGrotesk(color: onSurfaceVariant, fontWeight: FontWeight.bold, letterSpacing: 1.5),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: surfaceContainerLow.withOpacity(0.9),
-        unselectedItemColor: onSurfaceVariant.withOpacity(0.7),
+        backgroundColor: surfaceContainerLow.withValues(alpha: 0.9),
+        unselectedItemColor: onSurfaceVariant.withValues(alpha: 0.7),
         selectedItemColor: primary,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,

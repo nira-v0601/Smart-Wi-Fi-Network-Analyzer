@@ -13,7 +13,7 @@ class NetworkProvider extends ChangeNotifier {
   String? _wifiIP;
   int _currentRssi = -42;
   double _frequency = 5.8;
-  int _linkSpeed = 1200;
+  final int _linkSpeed = 1200;
 
   String? get wifiName => _wifiName;
   String? get wifiBSSID => _wifiBSSID;

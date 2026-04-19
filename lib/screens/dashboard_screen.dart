@@ -95,9 +95,9 @@ class DashboardScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppTheme.secondary.withOpacity(0.2),
+                  color: AppTheme.secondary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.secondary.withOpacity(0.5)),
+                  border: Border.all(color: AppTheme.secondary.withValues(alpha: 0.5)),
                 ),
                 child: Row(
                   children: [
@@ -150,7 +150,7 @@ class DashboardScreen extends StatelessWidget {
           children: [
             Text(value, style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(width: 2),
-            Text(unit, style: TextStyle(color: color.withOpacity(0.6), fontSize: 12)),
+            Text(unit, style: TextStyle(color: color.withValues(alpha: 0.6), fontSize: 12)),
           ],
         )
       ],
@@ -163,7 +163,7 @@ class DashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainer,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -182,7 +182,7 @@ class DashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainer,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.secondary.withOpacity(0.1)),
+        border: Border.all(color: AppTheme.secondary.withValues(alpha: 0.1)),
       ),
       child: const Column(
         children: [
@@ -214,13 +214,13 @@ class DashboardScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.onSurfaceVariant.withOpacity(0.1))
+              border: Border.all(color: AppTheme.onSurfaceVariant.withValues(alpha: 0.1))
             ),
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Container(width: 80, height: 80, decoration: BoxDecoration(border: Border.all(color: AppTheme.primary.withOpacity(0.3)), shape: BoxShape.circle)),
-                Container(width: 120, height: 120, decoration: BoxDecoration(border: Border.all(color: AppTheme.primary.withOpacity(0.1)), shape: BoxShape.circle)),
+                Container(width: 80, height: 80, decoration: BoxDecoration(border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)), shape: BoxShape.circle)),
+                Container(width: 120, height: 120, decoration: BoxDecoration(border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)), shape: BoxShape.circle)),
                 Container(width: 16, height: 16, decoration: BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primary, blurRadius: 10)])),
               ],
             ),

@@ -58,7 +58,7 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppTheme.secondary.withOpacity(_pulseController.value * 0.5 + 0.1),
+                      color: AppTheme.secondary.withValues(alpha: _pulseController.value * 0.5 + 0.1),
                       width: 10 + (_pulseController.value * 20),
                     ),
                   ),

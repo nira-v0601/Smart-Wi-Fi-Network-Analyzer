@@ -34,15 +34,15 @@ class _MainScreenState extends State<MainScreen> {
       extendBody: true,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppTheme.surfaceContainerLow.withOpacity(0.9),
-          border: Border(top: BorderSide(color: AppTheme.primary.withOpacity(0.1))),
+          color: AppTheme.surfaceContainerLow.withValues(alpha: 0.9),
+          border: Border(top: BorderSide(color: AppTheme.primary.withValues(alpha: 0.1))),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),
           ),
           boxShadow: [
              BoxShadow(
-               color: Colors.black.withOpacity(0.5),
+               color: Colors.black.withValues(alpha: 0.5),
                blurRadius: 50,
                offset: const Offset(0, -10),
              ),
@@ -63,7 +63,7 @@ class _MainScreenState extends State<MainScreen> {
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.transparent,
             selectedItemColor: AppTheme.secondary,
-            unselectedItemColor: AppTheme.onSurfaceVariant.withOpacity(0.7),
+            unselectedItemColor: AppTheme.onSurfaceVariant.withValues(alpha: 0.7),
             showUnselectedLabels: true,
             selectedFontSize: 10,
             unselectedFontSize: 10,
