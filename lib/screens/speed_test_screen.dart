@@ -93,21 +93,31 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), width: 10),
+                color: AppTheme.surfaceContainerLow,
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5), width: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primary.withValues(alpha: isTesting ? 0.3 : 0.1),
+                    blurRadius: isTesting ? 60 : 30,
+                    spreadRadius: isTesting ? 10 : 5,
+                  )
+                ]
               ),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.download, color: AppTheme.secondary, size: 40),
+                    Icon(Icons.speed, color: AppTheme.secondary.withValues(alpha: 0.8), size: 40),
+                    const SizedBox(height: 8),
                     Text(
                       downloadRate.toStringAsFixed(1),
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
                         color: AppTheme.primary,
-                        fontSize: 48,
+                        fontSize: 56,
+                        shadows: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.5), blurRadius: 15)],
                       ),
                     ),
-                    Text(unitText, style: const TextStyle(color: AppTheme.onSurfaceVariant)),
+                    Text(unitText, style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 16, letterSpacing: 2)),
                   ],
                 ),
               ),
@@ -121,16 +131,30 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
               ],
             ),
             const SizedBox(height: 48),
-            ElevatedButton(
-              onPressed: isTesting ? null : _startTesting,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  )
+                ]
               ),
-              child: Text(
-                isTesting ? 'TESTING...' : 'RUN SPEED TEST',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              child: ElevatedButton(
+                onPressed: isTesting ? null : _startTesting,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  elevation: 0,
+                ),
+                child: Text(
+                  isTesting ? 'TESTING...' : 'RUN SPEED TEST',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1),
+                ),
               ),
             ),
           ],

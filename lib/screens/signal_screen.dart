@@ -57,19 +57,39 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
                   height: 200,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    color: AppTheme.secondary.withValues(alpha: 0.05),
                     border: Border.all(
-                      color: AppTheme.secondary.withValues(alpha: _pulseController.value * 0.5 + 0.1),
-                      width: 10 + (_pulseController.value * 20),
+                      color: AppTheme.secondary.withValues(alpha: _pulseController.value * 0.8 + 0.2),
+                      width: 4 + (_pulseController.value * 12),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.secondary.withValues(alpha: _pulseController.value * 0.3),
+                        blurRadius: 40 * _pulseController.value,
+                        spreadRadius: 10 * _pulseController.value,
+                      )
+                    ]
                   ),
                   child: Center(
-                    child: Text(
-                      '$currentRssi\ndBm',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: AppTheme.secondary,
-                            fontSize: 48,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$currentRssi',
+                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                                color: AppTheme.secondary,
+                                fontSize: 64,
+                                shadows: [BoxShadow(color: AppTheme.secondary.withValues(alpha: 0.5), blurRadius: 20)],
+                              ),
+                        ),
+                        Text(
+                          'dBm',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppTheme.secondary.withValues(alpha: 0.7),
+                            letterSpacing: 2,
                           ),
+                        )
+                      ],
                     ),
                   ),
                 );
@@ -77,15 +97,25 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
             ),
             const SizedBox(height: 48),
             const Text(
-              'Signal Quality',
-              style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 16),
+              'SIGNAL QUALITY',
+              style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            Text(
-              getSignalStatus(currentRssi),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.1), blurRadius: 10)],
+              ),
+              child: Text(
+                getSignalStatus(currentRssi),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.onSurface,
+                    ),
+              ),
             ),
           ],
         ),

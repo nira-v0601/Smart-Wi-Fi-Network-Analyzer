@@ -50,20 +50,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'General',
             [
               ListTile(
-                leading: const Icon(Icons.dark_mode, color: AppTheme.primary),
-                title: const Text('Dark Mode'),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.dark_mode, color: AppTheme.primary),
+                ),
+                title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w500)),
                 trailing: Switch(
                   value: themeProvider.isDarkMode,
-                  activeTrackColor: AppTheme.secondary,
+                  activeThumbColor: AppTheme.primary,
+                  activeTrackColor: AppTheme.primary.withValues(alpha: 0.3),
                   onChanged: (value) {
                     themeProvider.toggleTheme(value);
                   },
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.history, color: AppTheme.primary),
-                title: const Text('Signal History'),
-                trailing: const Icon(Icons.chevron_right),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.history, color: AppTheme.primary),
+                ),
+                title: const Text('Signal History', style: TextStyle(fontWeight: FontWeight.w500)),
+                trailing: const Icon(Icons.chevron_right, color: AppTheme.onSurfaceVariant),
                 onTap: () {},
               ),
             ],
@@ -73,15 +84,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'About',
             [
               ListTile(
-                leading: const Icon(Icons.info, color: AppTheme.tertiary),
-                title: const Text('View Network Info'),
-                trailing: const Icon(Icons.chevron_right),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: AppTheme.tertiary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.info, color: AppTheme.tertiary),
+                ),
+                title: const Text('View Network Info', style: TextStyle(fontWeight: FontWeight.w500)),
+                trailing: const Icon(Icons.chevron_right, color: AppTheme.onSurfaceVariant),
                 onTap: () {},
               ),
               ListTile(
-                leading: const Icon(Icons.system_update, color: AppTheme.tertiary),
-                title: const Text('App Version'),
-                trailing: Text(appVersion, style: const TextStyle(color: AppTheme.onSurfaceVariant)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: AppTheme.tertiary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.system_update, color: AppTheme.tertiary),
+                ),
+                title: const Text('App Version', style: TextStyle(fontWeight: FontWeight.w500)),
+                trailing: Text(appVersion, style: const TextStyle(color: AppTheme.onSurfaceVariant, fontWeight: FontWeight.bold)),
               ),
             ],
           )
@@ -103,8 +124,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         Container(
           decoration: BoxDecoration(
-            color: AppTheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(16),
+            color: AppTheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ]
           ),
           child: Column(
             children: items,

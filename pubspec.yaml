@@ -43,6 +43,7 @@ dependencies:
   fl_chart: ^1.2.0
   font_awesome_flutter: ^11.0.0
   flutter_internet_speed_test: ^1.5.0
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

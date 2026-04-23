@@ -95,13 +95,28 @@ class _NetworksScreenState extends State<NetworksScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.05)),
+        color: AppTheme.surfaceContainer.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.surfaceVariant.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: signalColor.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Row(
         children: [
-          Icon(Icons.wifi, color: signalColor, size: 32),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: signalColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: signalColor.withValues(alpha: 0.2), blurRadius: 8)],
+            ),
+            child: Icon(Icons.wifi, color: signalColor, size: 28),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -109,18 +124,26 @@ class _NetworksScreenState extends State<NetworksScreen> {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text(
                   capability,
-                  style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.onSurfaceVariant, fontSize: 12),
                 ),
               ],
             ),
           ),
-          Text(
-            '$rssi dBm',
-            style: TextStyle(color: signalColor, fontWeight: FontWeight.bold),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: signalColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: signalColor.withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              '$rssi dBm',
+              style: TextStyle(color: signalColor, fontWeight: FontWeight.bold, fontSize: 12),
+            ),
           )
         ],
       ),
