@@ -49,27 +49,24 @@ class _NetworksScreenState extends State<NetworksScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _startScan,
-          )
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _startScan),
         ],
       ),
       body: isScanning
           ? const Center(child: CircularProgressIndicator())
           : accessPoints.isEmpty
-              ? _buildMockList() // Fallback for emulator mostly
-              : ListView.builder(
-                  itemCount: accessPoints.length,
-                  itemBuilder: (context, index) {
-                    final ap = accessPoints[index];
-                    return _buildNetworkTile(
-                      ap.ssid.isNotEmpty ? ap.ssid : 'Hidden Network',
-                      ap.level, 
-                      ap.capabilities
-                    );
-                  },
-                ),
+          ? _buildMockList() // Fallback for emulator mostly
+          : ListView.builder(
+              itemCount: accessPoints.length,
+              itemBuilder: (context, index) {
+                final ap = accessPoints[index];
+                return _buildNetworkTile(
+                  ap.ssid.isNotEmpty ? ap.ssid : 'Hidden Network',
+                  ap.level,
+                  ap.capabilities,
+                );
+              },
+            ),
     );
   }
 
@@ -97,13 +94,15 @@ class _NetworksScreenState extends State<NetworksScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainer.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.surfaceVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: AppTheme.surfaceVariant.withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
             color: signalColor.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -113,7 +112,12 @@ class _NetworksScreenState extends State<NetworksScreen> {
             decoration: BoxDecoration(
               color: signalColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: signalColor.withValues(alpha: 0.2), blurRadius: 8)],
+              boxShadow: [
+                BoxShadow(
+                  color: signalColor.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                ),
+              ],
             ),
             child: Icon(Icons.wifi, color: signalColor, size: 28),
           ),
@@ -124,11 +128,17 @@ class _NetworksScreenState extends State<NetworksScreen> {
               children: [
                 Text(
                   name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 Text(
                   capability,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.onSurfaceVariant, fontSize: 12),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -142,9 +152,13 @@ class _NetworksScreenState extends State<NetworksScreen> {
             ),
             child: Text(
               '$rssi dBm',
-              style: TextStyle(color: signalColor, fontWeight: FontWeight.bold, fontSize: 12),
+              style: TextStyle(
+                color: signalColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
