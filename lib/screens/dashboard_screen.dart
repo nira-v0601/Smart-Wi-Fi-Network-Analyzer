@@ -8,7 +8,7 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<NetworkProvider>(context);
+    final isLoading = context.select((NetworkProvider p) => p.isLoading);
 
     return Scaffold(
       appBar: AppBar(
@@ -40,7 +40,7 @@ class DashboardScreen extends StatelessWidget {
           )
         ],
       ),
-      body: provider.isLoading 
+      body: isLoading 
           ? const Center(child: CircularProgressIndicator()) 
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -52,7 +52,7 @@ class DashboardScreen extends StatelessWidget {
                      style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.bold),
                    ),
                    const SizedBox(height: 16),
-                   _buildMainSignalCard(context, provider),
+                   _buildMainSignalCard(context),
                    const SizedBox(height: 24),
                    const Text(
                      'CONNECTION DETAILS',
@@ -61,9 +61,9 @@ class DashboardScreen extends StatelessWidget {
                    const SizedBox(height: 16),
                    Row(
                      children: [
-                       Expanded(child: _buildIpCard(context, provider)),
+                       Expanded(child: _buildIpCard(context)),
                        const SizedBox(width: 16),
-                       Expanded(child: _buildIspCard(context, provider)),
+                       Expanded(child: _buildIspCard(context)),
                      ],
                    ),
                    const SizedBox(height: 80), // For bottom nav
@@ -73,7 +73,12 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMainSignalCard(BuildContext context, NetworkProvider provider) {
+  Widget _buildMainSignalCard(BuildContext context) {
+    final wifiName = context.select((NetworkProvider p) => p.wifiName);
+    final currentRssi = context.select((NetworkProvider p) => p.currentRssi);
+    final frequency = context.select((NetworkProvider p) => p.frequency);
+    final linkSpeed = context.select((NetworkProvider p) => p.linkSpeed);
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -109,7 +114,7 @@ class DashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            provider.wifiName ?? 'Wi-Fi is off/not connected',
+            wifiName ?? 'Wi-Fi is off/not connected',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -167,9 +172,9 @@ class DashboardScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatItem(context, 'Strength', provider.wifiName != null ? provider.currentRssi.toString() : 'N/A', provider.wifiName != null ? 'dBm' : '', AppTheme.primary),
-              _buildStatItem(context, 'Freq', provider.wifiName != null ? provider.frequency.toString() : 'N/A', provider.wifiName != null ? 'GHz' : '', AppTheme.secondary),
-              _buildStatItem(context, 'Speed', provider.wifiName != null && provider.linkSpeed > 0 ? provider.linkSpeed.toString() : 'N/A', provider.wifiName != null && provider.linkSpeed > 0 ? 'Mbps' : '', AppTheme.tertiary),
+              _buildStatItem(context, 'Strength', wifiName != null ? currentRssi.toString() : 'N/A', wifiName != null ? 'dBm' : '', AppTheme.primary),
+              _buildStatItem(context, 'Freq', wifiName != null ? frequency.toString() : 'N/A', wifiName != null ? 'GHz' : '', AppTheme.secondary),
+              _buildStatItem(context, 'Speed', wifiName != null && linkSpeed > 0 ? linkSpeed.toString() : 'N/A', wifiName != null && linkSpeed > 0 ? 'Mbps' : '', AppTheme.tertiary),
             ],
           )
         ],
@@ -196,7 +201,8 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildIpCard(BuildContext context, NetworkProvider provider) {
+  Widget _buildIpCard(BuildContext context) {
+    final wifiIP = context.select((NetworkProvider p) => p.wifiIP);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
@@ -220,15 +226,19 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(height: 16),
           const Text('IP PROTOCOL', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
           const SizedBox(height: 8),
-          Text(provider.wifiIP ?? 'Not Connected', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          Text(wifiIP ?? 'Not Connected', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
           const SizedBox(height: 4),
-          Text(provider.wifiIP != null ? 'Static Lease' : 'N/A', style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12)),
+          Text(wifiIP != null ? 'Static Lease' : 'N/A', style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12)),
         ],
       ),
     );
   }
 
-  Widget _buildIspCard(BuildContext context, NetworkProvider provider) {
+  Widget _buildIspCard(BuildContext context) {
+    final wifiName = context.select((NetworkProvider p) => p.wifiName);
+    final ispName = context.select((NetworkProvider p) => p.ispName);
+    final ispType = context.select((NetworkProvider p) => p.ispType);
+    
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
@@ -252,9 +262,9 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(height: 16),
           const Text('ISP INFO', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
           const SizedBox(height: 8),
-          Text(provider.ispName ?? (provider.wifiName != null ? 'Local ISP' : 'N/A'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text(ispName ?? (wifiName != null ? 'Local ISP' : 'N/A'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
-          Text(provider.ispType ?? (provider.wifiName != null ? 'Broadband' : 'Unknown'), style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12), textAlign: TextAlign.center),
+          Text(ispType ?? (wifiName != null ? 'Broadband' : 'Unknown'), style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12), textAlign: TextAlign.center),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_wifi_analyzer/theme/app_theme.dart';
 import 'package:smart_wifi_analyzer/providers/theme_provider.dart';
+import 'package:smart_wifi_analyzer/screens/network_info_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -90,9 +91,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(color: AppTheme.tertiary.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: const Icon(Icons.info, color: AppTheme.tertiary),
                 ),
-                title: const Text('View Network Info', style: TextStyle(fontWeight: FontWeight.w500)),
                 trailing: const Icon(Icons.chevron_right, color: AppTheme.onSurfaceVariant),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NetworkInfoScreen()),
+                  );
+                },
               ),
               ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),

@@ -1,15 +1,17 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:network_info_plus/network_info_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:wifi_scan/wifi_scan.dart';
+import 'package:smart_wifi_analyzer/services/isp_service.dart';
+import 'package:smart_wifi_analyzer/services/wifi_service.dart';
 
-class NetworkProvider extends ChangeNotifier {
-  final NetworkInfo _networkInfo = NetworkInfo();
+class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
+  final WifiService _wifiService = WifiService();
+  final IspService _ispService = IspService();
+
   Timer? _pollingTimer;
-  StreamSubscription<List<WiFiAccessPoint>>? _scanSubscription;
+  Timer? _connectionCheckTimer;
+  StreamSubscription? _scanSubscription;
+
+  bool _isAppInForeground = true;
 
   String? _wifiName;
   String? _wifiBSSID;
@@ -17,10 +19,12 @@ class NetworkProvider extends ChangeNotifier {
   int _currentRssi = 0;
   String _frequency = "0";
   int _linkSpeed = 0;
-  final List<int> _rssiHistory = List.filled(60, 0);
+  final List<int> _rssiHistory = [];
   
   String? _ispName;
   String? _ispType;
+
+  bool _isLoading = false;
 
   String? get wifiName => _wifiName;
   String? get wifiBSSID => _wifiBSSID;
@@ -31,78 +35,83 @@ class NetworkProvider extends ChangeNotifier {
   List<int> get rssiHistory => _rssiHistory;
   String? get ispName => _ispName;
   String? get ispType => _ispType;
-
-  bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   NetworkProvider() {
+    WidgetsBinding.instance.addObserver(this);
     initNetworkInfo();
   }
 
   @override
   void dispose() {
-    _pollingTimer?.cancel();
-    _scanSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _cancelTimers();
+    _wifiService.stopContinuousScan();
+    _wifiService.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _isAppInForeground = true;
+      initNetworkInfo();
+    } else if (state == AppLifecycleState.paused) {
+      _isAppInForeground = false;
+      _cancelTimers();
+      _wifiService.stopContinuousScan();
+    }
+  }
+
+  void _cancelTimers() {
+    _pollingTimer?.cancel();
+    _connectionCheckTimer?.cancel();
+    _scanSubscription?.cancel();
   }
 
   Future<void> initNetworkInfo() async {
     _isLoading = true;
     notifyListeners();
 
-    // Setup permission
-    var status = await Permission.location.status;
-    if (!status.isGranted) {
-      await Permission.location.request();
-    }
+    await _wifiService.requestPermissions();
 
-    try {
-      _wifiName = await _networkInfo.getWifiName();
-      _wifiBSSID = await _networkInfo.getWifiBSSID();
-      _wifiIP = await _networkInfo.getWifiIP();
-    } catch (e) {
-      debugPrint("Failed to get network info: $e");
-    }
+    _wifiName = await _wifiService.getWifiName();
+    _wifiBSSID = await _wifiService.getWifiBSSID();
+    _wifiIP = await _wifiService.getWifiIP();
 
-    if (_wifiName == null || _wifiName!.isEmpty || _wifiName == '<unknown ssid>') {
-        _wifiName = null;
-        _wifiBSSID = null;
-        _wifiIP = null;
-        _ispName = null;
-        _ispType = null;
+    if (_wifiName == null) {
+      _ispName = null;
+      _ispType = null;
+      _currentRssi = 0;
+      _frequency = "0";
     } else {
-        _fetchISPInfo();
+      _fetchISPInfo();
     }
 
     _isLoading = false;
     notifyListeners();
-    
-    _startSignalPolling();
+
+    if (_isAppInForeground) {
+      _startSignalPolling();
+    }
   }
 
   Future<void> _fetchISPInfo() async {
-    if (_ispName != null) return; // already fetched
-    try {
-      final response = await http.get(Uri.parse('https://ipwhois.app/json/'));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          _ispName = data['isp'];
-          _ispType = data['type'] ?? 'Broadband';
-          notifyListeners();
-        }
-      }
-    } catch (e) {
-      debugPrint("Failed to fetch ISP: $e");
+    if (_ispName != null) return;
+    
+    final ispData = await _ispService.fetchISPInfo();
+    if (ispData != null) {
+      _ispName = ispData['name'];
+      _ispType = ispData['type'];
+      notifyListeners();
     }
   }
 
   void _startSignalPolling() {
-    // Listen to results stream for real-time updates
     _scanSubscription?.cancel();
-    _scanSubscription = WiFiScan.instance.onScannedResultsAvailable.listen((results) {
+    _scanSubscription = _wifiService.scannedResultsStream.listen((results) {
       if (_wifiName == null) return;
-      
+
       String cleanWifiName = _wifiName!.replaceAll('"', '');
       String? cleanBSSID = _wifiBSSID?.toLowerCase();
 
@@ -117,17 +126,18 @@ class NetworkProvider extends ChangeNotifier {
           } else {
             _frequency = "6";
           }
+          notifyListeners();
           break;
         }
       }
     });
 
-    // High-frequency UI loop for the live graph (100ms)
+    _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (_wifiName != null && _currentRssi != 0) {
         _rssiHistory.add(_currentRssi);
       } else {
-        _rssiHistory.add(0);
+        _rssiHistory.add(-100);
       }
       
       if (_rssiHistory.length > 60) {
@@ -136,79 +146,29 @@ class NetworkProvider extends ChangeNotifier {
       notifyListeners();
     });
 
-    // Hardware-safe continuous scan loop
-    _runContinuousScan();
-  }
-
-  Future<void> _runContinuousScan() async {
-    while (true) {
-      if (_pollingTimer == null || !_pollingTimer!.isActive) break;
-
-      try {
-        String? newName = await _networkInfo.getWifiName();
-        String? newBSSID = await _networkInfo.getWifiBSSID();
-        String? newIP = await _networkInfo.getWifiIP();
-
-        if (newName == null || newName.isEmpty || newName == '<unknown ssid>') {
-          newName = null;
-          newBSSID = null;
-          newIP = null;
-        }
-
-        bool connectionChanged = (_wifiName != newName || _wifiIP != newIP);
+    _connectionCheckTimer?.cancel();
+    _connectionCheckTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      String? newName = await _wifiService.getWifiName();
+      String? newIP = await _wifiService.getWifiIP();
+      
+      if (newName != _wifiName || newIP != _wifiIP) {
         _wifiName = newName;
-        _wifiBSSID = newBSSID;
         _wifiIP = newIP;
-
+        _wifiBSSID = await _wifiService.getWifiBSSID();
+        
         if (_wifiName == null) {
           _currentRssi = 0;
           _frequency = "0";
-          _linkSpeed = 0;
           _ispName = null;
           _ispType = null;
-        } else if (connectionChanged) {
+        } else {
+          _ispName = null; // Reset to force re-fetch
           _fetchISPInfo();
         }
+        notifyListeners();
+      }
+    });
 
-        // Only scan for signal if connected
-        if (_wifiName != null) {
-          final canScan = await WiFiScan.instance.canStartScan();
-          if (canScan == CanStartScan.yes) {
-            // Timeout prevents the loop from hanging on older Android versions
-            await WiFiScan.instance.startScan().timeout(
-              const Duration(seconds: 3),
-              onTimeout: () => false,
-            );
-          }
-          
-          // Even if startScan is throttled, try to read cached results
-          final canGet = await WiFiScan.instance.canGetScannedResults();
-          if (canGet == CanGetScannedResults.yes) {
-            final results = await WiFiScan.instance.getScannedResults();
-            String cleanWifiName = _wifiName!.replaceAll('"', '');
-            String? cleanBSSID = _wifiBSSID?.toLowerCase();
-
-            for (var ap in results) {
-              if ((cleanBSSID != null && ap.bssid.toLowerCase() == cleanBSSID) || 
-                  (ap.ssid.isNotEmpty && ap.ssid == cleanWifiName)) {
-                _currentRssi = ap.level;
-                if (ap.frequency < 3000) {
-                  _frequency = "2.4";
-                } else if (ap.frequency < 5950) {
-                  _frequency = "5";
-                } else {
-                  _frequency = "6";
-                }
-                break;
-              }
-            }
-          }
-        }
-      } catch (_) {}
-
-      // Fast 1 second polling interval. Will be throttled by Android if Developer Options aren't toggled, 
-      // but the cached results logic ensures it doesn't drop to 0.
-      await Future.delayed(const Duration(milliseconds: 1000));
-    }
+    _wifiService.startContinuousScan();
   }
 }

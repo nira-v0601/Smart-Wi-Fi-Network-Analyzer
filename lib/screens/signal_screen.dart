@@ -36,11 +36,13 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
   }
 
   Widget _buildGraph(BuildContext context, List<int> rssiHistory) {
-    if (rssiHistory.isEmpty) return const SizedBox();
-
     List<FlSpot> spots = [];
-    for (int i = 0; i < rssiHistory.length; i++) {
-      spots.add(FlSpot(i.toDouble(), rssiHistory[i] == 0 ? -100 : rssiHistory[i].toDouble()));
+    if (rssiHistory.isEmpty) {
+      spots.add(const FlSpot(0, -100)); // Dummy spot to prevent FlChart crash on empty data
+    } else {
+      for (int i = 0; i < rssiHistory.length; i++) {
+        spots.add(FlSpot(i.toDouble(), rssiHistory[i] == 0 ? -100 : rssiHistory[i].toDouble()));
+      }
     }
 
     return Container(
@@ -54,8 +56,10 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
       ),
       child: LineChart(
         LineChartData(
+          minX: 0,
+          maxX: 59,
           minY: -100,
-          maxY: -30,
+          maxY: -20,
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
