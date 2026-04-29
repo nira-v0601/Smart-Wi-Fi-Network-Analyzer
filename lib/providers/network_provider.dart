@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:smart_wifi_analyzer/services/isp_service.dart';
 import 'package:smart_wifi_analyzer/services/wifi_service.dart';
 
@@ -24,6 +27,8 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
   String? _ispName;
   String? _ispType;
 
+  String? _publicIP;
+
   bool _isLoading = false;
 
   String? get wifiName => _wifiName;
@@ -35,6 +40,7 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
   List<int> get rssiHistory => _rssiHistory;
   String? get ispName => _ispName;
   String? get ispType => _ispType;
+  String? get publicIP => _publicIP;
   bool get isLoading => _isLoading;
 
   NetworkProvider() {
@@ -77,7 +83,8 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
 
     _wifiName = await _wifiService.getWifiName();
     _wifiBSSID = await _wifiService.getWifiBSSID();
-    _wifiIP = await _wifiService.getWifiIP();
+    _wifiIP = await _getLocalIP();
+    _fetchPublicIP();
 
     if (_wifiName == null) {
       _ispName = null;
@@ -105,6 +112,36 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
       _ispType = ispData['type'];
       notifyListeners();
     }
+  }
+
+  Future<String?> _getLocalIP() async {
+    try {
+      for (var interface in await NetworkInterface.list()) {
+        for (var addr in interface.addresses) {
+          if (addr.type == InternetAddressType.IPv4 && !addr.isLoopback) {
+            return addr.address;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to get local IP: $e");
+    }
+    return null;
+  }
+
+  Future<void> _fetchPublicIP() async {
+    try {
+      final response = await http.get(Uri.parse('https://api.ipify.org?format=json')).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        _publicIP = data['ip'];
+      } else {
+        _publicIP = "Public IP unavailable";
+      }
+    } catch (e) {
+      _publicIP = "Public IP unavailable";
+    }
+    notifyListeners();
   }
 
   void _startSignalPolling() {
@@ -149,18 +186,20 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
     _connectionCheckTimer?.cancel();
     _connectionCheckTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       String? newName = await _wifiService.getWifiName();
-      String? newIP = await _wifiService.getWifiIP();
+      String? newIP = await _getLocalIP();
       
       if (newName != _wifiName || newIP != _wifiIP) {
         _wifiName = newName;
         _wifiIP = newIP;
         _wifiBSSID = await _wifiService.getWifiBSSID();
+        _fetchPublicIP();
         
         if (_wifiName == null) {
           _currentRssi = 0;
           _frequency = "0";
           _ispName = null;
           _ispType = null;
+          _publicIP = null;
         } else {
           _ispName = null; // Reset to force re-fetch
           _fetchISPInfo();

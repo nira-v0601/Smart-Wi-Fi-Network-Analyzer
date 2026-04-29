@@ -203,6 +203,8 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildIpCard(BuildContext context) {
     final wifiIP = context.select((NetworkProvider p) => p.wifiIP);
+    final publicIP = context.select((NetworkProvider p) => p.publicIP);
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
@@ -224,11 +226,13 @@ class DashboardScreen extends StatelessWidget {
             child: const Icon(Icons.router, color: AppTheme.tertiary, size: 28),
           ),
           const SizedBox(height: 16),
-          const Text('IP PROTOCOL', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
-          const SizedBox(height: 8),
-          Text(wifiIP ?? 'Not Connected', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          const Text('LOCAL IP (LAN)', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
           const SizedBox(height: 4),
-          Text(wifiIP != null ? 'Static Lease' : 'N/A', style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12)),
+          Text(wifiIP ?? 'Not Connected', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          const Text('PUBLIC IP (INTERNET)', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
+          const SizedBox(height: 4),
+          Text(publicIP ?? 'Detecting...', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
         ],
       ),
     );

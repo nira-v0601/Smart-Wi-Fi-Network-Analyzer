@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:smart_wifi_analyzer/theme/app_theme.dart';
 import 'package:smart_wifi_analyzer/providers/theme_provider.dart';
 import 'package:smart_wifi_analyzer/screens/network_info_screen.dart';
+import 'package:smart_wifi_analyzer/screens/speed_test_history_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -74,9 +75,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: const Icon(Icons.history, color: AppTheme.primary),
                 ),
-                title: const Text('Signal History', style: TextStyle(fontWeight: FontWeight.w500)),
+                title: const Text('Speed Test History', style: TextStyle(fontWeight: FontWeight.w500)),
                 trailing: const Icon(Icons.chevron_right, color: AppTheme.onSurfaceVariant),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SpeedTestHistoryScreen()),
+                  );
+                },
               ),
             ],
           ),

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_internet_speed_test/flutter_internet_speed_test.dart';
 import 'package:smart_wifi_analyzer/theme/app_theme.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math' as math;
-
-enum TestStatus { ready, downloading, uploading, completed }
+import 'package:smart_wifi_analyzer/services/speed_test_service.dart';
 
 class SpeedTestScreen extends StatefulWidget {
   const SpeedTestScreen({super.key});
@@ -14,12 +12,12 @@ class SpeedTestScreen extends StatefulWidget {
 }
 
 class _SpeedTestScreenState extends State<SpeedTestScreen> {
-  final internetSpeedTest = FlutterInternetSpeedTest();
+  final speedTestService = SpeedTestService();
 
-  TestStatus _status = TestStatus.ready;
+  SpeedTestStatus _status = SpeedTestStatus.ready;
   
   double _currentRate = 0;
-  String _unitText = 'Mbps';
+  final String _unitText = 'Mbps';
 
   final List<double> _downloadData = [];
   final List<double> _uploadData = [];
@@ -28,111 +26,96 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
   double _peakUpload = 0;
   double _avgDownload = 0;
   double _avgUpload = 0;
+  double _ping = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    speedTestService.onStatusChange = (status) {
+      if (mounted) setState(() => _status = status);
+    };
+    speedTestService.onPing = (ping) {
+      if (mounted) setState(() => _ping = ping);
+    };
+    speedTestService.onDownloadProgress = (speed) {
+      if (mounted) {
+        setState(() {
+          _currentRate = speed;
+          _downloadData.add(speed);
+          if (speed > _peakDownload) _peakDownload = speed;
+          // Dynamically compute average up to this point
+          if (_downloadData.isNotEmpty) {
+             _avgDownload = _downloadData.reduce((a, b) => a + b) / _downloadData.length;
+          }
+        });
+      }
+    };
+    speedTestService.onUploadProgress = (speed) {
+      if (mounted) {
+        setState(() {
+          _currentRate = speed;
+          _uploadData.add(speed);
+          if (speed > _peakUpload) _peakUpload = speed;
+          // Dynamically compute average up to this point
+          if (_uploadData.isNotEmpty) {
+             _avgUpload = _uploadData.reduce((a, b) => a + b) / _uploadData.length;
+          }
+        });
+      }
+    };
+    speedTestService.onCompleted = (ping, dl, ul) {
+      if (mounted) {
+        setState(() {
+          _ping = ping;
+          _avgDownload = dl;
+          _avgUpload = ul;
+          _currentRate = 0;
+        });
+      }
+    };
+    speedTestService.onError = (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Test Failed: $error"),
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    };
+  }
+
+  @override
+  void dispose() {
+    speedTestService.stop();
+    super.dispose();
+  }
 
   void _startTesting() {
     setState(() {
-      _status = TestStatus.ready;
       _currentRate = 0;
       _peakDownload = 0;
       _peakUpload = 0;
       _avgDownload = 0;
       _avgUpload = 0;
+      _ping = 0;
       _downloadData.clear();
       _uploadData.clear();
     });
-
-    internetSpeedTest.startTesting(
-      useFastApi: true,
-      fileSizeInBytes: 100 * 1024 * 1024, // 100 MB for accurate high-speed measurement
-      onStarted: () {
-        setState(() => _status = TestStatus.downloading);
-      },
-      onCompleted: (TestResult download, TestResult upload) {
-        setState(() {
-          _status = TestStatus.completed;
-          _avgDownload = download.transferRate;
-          _avgUpload = upload.transferRate;
-          _currentRate = 0;
-          _unitText = download.unit == SpeedUnit.kbps ? 'Kbps' : 'Mbps';
-        });
-      },
-      onProgress: (double percent, TestResult data) {
-        setState(() {
-          if (data.type == TestType.download) {
-            _status = TestStatus.downloading;
-            _downloadData.add(data.transferRate);
-            if (data.transferRate > _peakDownload) _peakDownload = data.transferRate;
-            
-            final smoothed = _getSmoothedData(_downloadData);
-            _currentRate = smoothed.isNotEmpty ? smoothed.last : 0;
-            if (smoothed.isNotEmpty) {
-              _avgDownload = smoothed.reduce((a, b) => a + b) / smoothed.length;
-            }
-          } else {
-            _status = TestStatus.uploading;
-            _uploadData.add(data.transferRate);
-            if (data.transferRate > _peakUpload) _peakUpload = data.transferRate;
-            
-            final smoothed = _getSmoothedData(_uploadData);
-            _currentRate = smoothed.isNotEmpty ? smoothed.last : 0;
-            if (smoothed.isNotEmpty) {
-              _avgUpload = smoothed.reduce((a, b) => a + b) / smoothed.length;
-            }
-          }
-        });
-      },
-      onError: (String errorMessage, String speedTestError) {
-        if (mounted) {
-          setState(() => _status = TestStatus.ready);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Test Failed: $errorMessage"),
-              backgroundColor: AppTheme.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      },
-      onDefaultServerSelectionInProgress: () {},
-      onDefaultServerSelectionDone: (Client? client) {},
-      onDownloadComplete: (TestResult data) {
-        setState(() {
-          _avgDownload = data.transferRate;
-        });
-      },
-      onUploadComplete: (TestResult data) {
-        setState(() {
-          _avgUpload = data.transferRate;
-        });
-      },
-      onCancel: () {
-        setState(() => _status = TestStatus.ready);
-      },
-    );
+    speedTestService.startTest();
   }
 
-  List<double> _getSmoothedData(List<double> rawData) {
-    if (rawData.isEmpty) return [];
-    int window = 5; // 5-point moving average
-    List<double> smoothed = [];
-    for (int i = 0; i < rawData.length; i++) {
-      int start = math.max(0, i - window + 1);
-      int count = i - start + 1;
-      double sum = 0;
-      for (int j = start; j <= i; j++) {
-        sum += rawData[j];
-      }
-      smoothed.add(sum / count);
-    }
-    return smoothed;
-  }
 
   String _getStatusText() {
     switch (_status) {
-      case TestStatus.ready: return "READY";
-      case TestStatus.downloading: return "TESTING DOWNLOAD...";
-      case TestStatus.uploading: return "TESTING UPLOAD...";
-      case TestStatus.completed: return "COMPLETED";
+      case SpeedTestStatus.ready: return "READY";
+      case SpeedTestStatus.selectingServer: return "SELECTING SERVER...";
+      case SpeedTestStatus.pinging: return "MEASURING PING...";
+      case SpeedTestStatus.downloading: return "TESTING DOWNLOAD...";
+      case SpeedTestStatus.uploading: return "TESTING UPLOAD...";
+      case SpeedTestStatus.completed: return "COMPLETED";
+      case SpeedTestStatus.error: return "TEST FAILED";
     }
   }
 
@@ -140,10 +123,10 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
     List<double> activeData = [];
     Color lineColor = AppTheme.primary;
     
-    if (_status == TestStatus.downloading) {
+    if (_status == SpeedTestStatus.downloading) {
       activeData = _getSmoothedData(_downloadData);
       lineColor = AppTheme.secondary;
-    } else if (_status == TestStatus.uploading || _status == TestStatus.completed) {
+    } else if (_status == SpeedTestStatus.uploading || _status == SpeedTestStatus.completed) {
       activeData = _getSmoothedData(_uploadData);
       lineColor = AppTheme.tertiary;
     }
@@ -158,8 +141,8 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
     }
 
     double maxY = 100;
-    if (_status == TestStatus.downloading && _peakDownload > 0) maxY = _peakDownload * 1.2;
-    if ((_status == TestStatus.uploading || _status == TestStatus.completed) && _peakUpload > 0) maxY = _peakUpload * 1.2;
+    if (_status == SpeedTestStatus.downloading && _peakDownload > 0) maxY = _peakDownload * 1.2;
+    if ((_status == SpeedTestStatus.uploading || _status == SpeedTestStatus.completed) && _peakUpload > 0) maxY = _peakUpload * 1.2;
     if (maxY < 10) maxY = 10;
 
     return Container(
@@ -204,7 +187,7 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTesting = _status == TestStatus.downloading || _status == TestStatus.uploading;
+    bool isTesting = _status == SpeedTestStatus.pinging || _status == SpeedTestStatus.downloading || _status == SpeedTestStatus.uploading;
 
     return Scaffold(
       appBar: AppBar(
@@ -219,7 +202,8 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
             Text(
               _getStatusText(),
               style: TextStyle(
-                color: _status == TestStatus.completed ? AppTheme.primary : AppTheme.onSurfaceVariant,
+                color: _status == SpeedTestStatus.completed ? AppTheme.primary : 
+                       _status == SpeedTestStatus.error ? AppTheme.error : AppTheme.onSurfaceVariant,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
@@ -250,7 +234,9 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
                     Icon(Icons.speed, color: AppTheme.secondary.withValues(alpha: 0.8), size: 32),
                     const SizedBox(height: 8),
                     Text(
-                      _status == TestStatus.completed ? _avgDownload.toStringAsFixed(1) : _currentRate.toStringAsFixed(1),
+                      _status == SpeedTestStatus.completed 
+                        ? _avgDownload.toStringAsFixed(1) 
+                        : _currentRate.toStringAsFixed(1),
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
                         color: AppTheme.primary,
                         fontSize: 48,
@@ -280,6 +266,22 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
                 ),
                 child: Column(
                   children: [
+                    // Ping Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.network_ping, size: 20, color: AppTheme.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          'PING: ${_ping > 0 ? _ping.toStringAsFixed(0) : '--'} ms',
+                          style: const TextStyle(color: AppTheme.primary, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Container(height: 1, width: double.infinity, color: AppTheme.onSurfaceVariant.withValues(alpha: 0.2)),
+                    const SizedBox(height: 24),
+                    // Download & Upload
                     Row(
                       children: [
                         Expanded(child: _buildMetricCol('DOWNLOAD', _avgDownload, _peakDownload, AppTheme.secondary)),
@@ -341,12 +343,42 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        Text('${avg.toStringAsFixed(1)} $_unitText', style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
+        Text('${avg > 0 ? avg.toStringAsFixed(1) : '--'} $_unitText', style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
         const Text('AVERAGE', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
         const SizedBox(height: 16),
-        Text('${peak.toStringAsFixed(1)} $_unitText', style: const TextStyle(color: AppTheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold)),
+        Text('${peak > 0 ? peak.toStringAsFixed(1) : '--'} $_unitText', style: const TextStyle(color: AppTheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold)),
         const Text('PEAK', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
       ],
     );
+  }
+
+  List<double> _getSmoothedData(List<double> rawData) {
+    if (rawData.isEmpty) return [];
+    List<double> smoothed = [];
+    double previous = rawData.first;
+    smoothed.add(previous);
+
+    for (int i = 1; i < rawData.length; i++) {
+      double current = rawData[i];
+      
+      // Clamp changes > 50% between frames
+      if (current > previous * 1.5) {
+        current = previous * 1.5;
+      } else if (previous > 0 && current < previous * 0.5) {
+        current = previous * 0.5;
+      }
+      
+      // Exponential Moving Average
+      double smoothedValue = (previous * 0.7) + (current * 0.3);
+      smoothed.add(smoothedValue);
+      previous = smoothedValue;
+    }
+    
+    // Keep time-series buffer (last 20 values) as requested
+    if (smoothed.length > 20) {
+      smoothed = smoothed.sublist(smoothed.length - 20);
+    }
+    
+    return smoothed;
   }
 }
