@@ -21,7 +21,7 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
   String? _wifiIP;
   int _currentRssi = 0;
   String _frequency = "0";
-  int _linkSpeed = 0;
+  final int _linkSpeed = 0;
   final List<int> _rssiHistory = [];
   
   String? _ispName;
