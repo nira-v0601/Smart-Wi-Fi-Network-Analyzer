@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_wifi_analyzer/providers/network_provider.dart';
 import 'package:smart_wifi_analyzer/theme/app_theme.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -58,7 +59,7 @@ class DashboardScreen extends StatelessWidget {
                    const SizedBox(height: AppTheme.cardSpacing),
                    _buildIspSubCard(context),
                    const SizedBox(height: 80), // For bottom nav
-                ],
+                ].animate(interval: 100.ms).fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
               ),
             ),
     );

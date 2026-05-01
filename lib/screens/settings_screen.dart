@@ -5,6 +5,7 @@ import 'package:smart_wifi_analyzer/theme/app_theme.dart';
 import 'package:smart_wifi_analyzer/providers/theme_provider.dart';
 import 'package:smart_wifi_analyzer/screens/network_info_screen.dart';
 import 'package:smart_wifi_analyzer/screens/speed_test_history_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -124,7 +125,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           )
-        ],
+        ].animate(interval: 100.ms).fadeIn(duration: 500.ms).slideX(begin: -0.1, end: 0, curve: Curves.easeOutQuad),
       ),
     );
   }

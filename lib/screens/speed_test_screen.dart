@@ -3,7 +3,7 @@ import 'package:smart_wifi_analyzer/theme/app_theme.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math' as math;
 import 'package:smart_wifi_analyzer/services/speed_test_service.dart';
-
+import 'package:flutter_animate/flutter_animate.dart';
 class SpeedTestScreen extends StatefulWidget {
   const SpeedTestScreen({super.key});
 
@@ -17,6 +17,7 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
   SpeedTestStatus _status = SpeedTestStatus.ready;
   
   double _currentRate = 0;
+  double _currentPercent = 0;
   final String _unitText = 'Mbps';
 
   final List<double> _downloadData = [];
@@ -37,10 +38,11 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
     speedTestService.onPing = (ping) {
       if (mounted) setState(() => _ping = ping);
     };
-    speedTestService.onDownloadProgress = (speed) {
+    speedTestService.onDownloadProgress = (speed, percent) {
       if (mounted) {
         setState(() {
           _currentRate = speed;
+          _currentPercent = percent;
           _downloadData.add(speed);
           if (speed > _peakDownload) _peakDownload = speed;
           // Dynamically compute average up to this point
@@ -50,10 +52,11 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
         });
       }
     };
-    speedTestService.onUploadProgress = (speed) {
+    speedTestService.onUploadProgress = (speed, percent) {
       if (mounted) {
         setState(() {
           _currentRate = speed;
+          _currentPercent = percent;
           _uploadData.add(speed);
           if (speed > _peakUpload) _peakUpload = speed;
           // Dynamically compute average up to this point
@@ -70,6 +73,7 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
           _avgDownload = dl;
           _avgUpload = ul;
           _currentRate = 0;
+          _currentPercent = 100;
         });
       }
     };
@@ -95,6 +99,7 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
   void _startTesting() {
     setState(() {
       _currentRate = 0;
+      _currentPercent = 0;
       _peakDownload = 0;
       _peakUpload = 0;
       _avgDownload = 0;
@@ -261,6 +266,9 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
                   ),
                 ),
                 Text(_unitText, style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 14, letterSpacing: 2)),
+                const SizedBox(height: 8),
+                if (_status == SpeedTestStatus.downloading || _status == SpeedTestStatus.uploading)
+                  Text('${_currentPercent.toStringAsFixed(0)}%', style: const TextStyle(color: AppTheme.primary, fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -274,7 +282,7 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
         const SizedBox(height: 48),
         if (_status == SpeedTestStatus.ready || _status == SpeedTestStatus.error || _status == SpeedTestStatus.completed)
           _buildActionButton(_status == SpeedTestStatus.completed ? "TEST AGAIN" : "START TEST", _startTesting),
-      ],
+      ].animate(interval: 100.ms).fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
     );
   }
 

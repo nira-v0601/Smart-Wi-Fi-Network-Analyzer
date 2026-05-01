@@ -1,11 +1,22 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_wifi_analyzer/providers/network_provider.dart';
-import 'package:smart_wifi_analyzer/screens/main_screen.dart';
+import 'package:smart_wifi_analyzer/screens/splash_screen.dart';
 import 'package:smart_wifi_analyzer/theme/app_theme.dart';
 import 'package:smart_wifi_analyzer/providers/theme_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isAndroid) {
+    try {
+      await FlutterDisplayMode.setHighRefreshRate();
+    } catch (e) {
+      debugPrint('Error setting high refresh rate: $e');
+    }
+  }
+
   runApp(
     MultiProvider(
       providers: [
@@ -25,12 +36,12 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: 'Smart Wi-Fi Network Analyzer',
+          title: 'Smart Wi-Fi Analyzer',
           debugShowCheckedModeBanner: false,
           themeMode: themeProvider.themeMode,
           theme: ThemeData.light(), // Fallback base
           darkTheme: AppTheme.darkTheme,
-          home: const MainScreen(),
+          home: const SplashScreen(),
         );
       },
     );

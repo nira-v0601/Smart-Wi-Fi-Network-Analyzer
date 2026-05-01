@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 import 'package:smart_wifi_analyzer/theme/app_theme.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class NetworksScreen extends StatefulWidget {
   const NetworksScreen({super.key});
@@ -65,7 +66,7 @@ class _NetworksScreenState extends State<NetworksScreen> {
                   ap.level,
                   ap.capabilities,
                   ap.frequency,
-                );
+                ).animate().fadeIn(duration: 400.ms, delay: (index * 50).ms).slideX(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
               },
             ),
     );
@@ -74,9 +75,9 @@ class _NetworksScreenState extends State<NetworksScreen> {
   Widget _buildMockList() {
     return ListView(
       children: [
-        _buildNetworkTile('NEON_FLUX_5G', -42, '[WPA3-ENTERPRISE]', 5200),
-        _buildNetworkTile('Cyber_Mesh_2.4', -65, '[WPA2-PSK]', 2412),
-        _buildNetworkTile('Guest_Link', -80, '[OPEN]', 2462),
+        _buildNetworkTile('NEON_FLUX_5G', -42, '[WPA3-ENTERPRISE]', 5200).animate().fadeIn(duration: 400.ms, delay: 0.ms).slideX(begin: 0.1, end: 0),
+        _buildNetworkTile('Cyber_Mesh_2.4', -65, '[WPA2-PSK]', 2412).animate().fadeIn(duration: 400.ms, delay: 50.ms).slideX(begin: 0.1, end: 0),
+        _buildNetworkTile('Guest_Link', -80, '[OPEN]', 2462).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideX(begin: 0.1, end: 0),
       ],
     );
   }

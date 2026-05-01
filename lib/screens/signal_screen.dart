@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:smart_wifi_analyzer/providers/network_provider.dart';
 import 'package:smart_wifi_analyzer/theme/app_theme.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class SignalScreen extends StatefulWidget {
   const SignalScreen({super.key});
@@ -252,7 +253,7 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
               _buildGraph(context, rssiHistory),
               const SizedBox(height: 24),
               const SizedBox(height: 100),
-            ],
+            ].animate(interval: 100.ms).fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
           ),
         ),
       ),
