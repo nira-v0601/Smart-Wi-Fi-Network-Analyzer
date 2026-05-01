@@ -187,8 +187,6 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTesting = _status == SpeedTestStatus.pinging || _status == SpeedTestStatus.downloading || _status == SpeedTestStatus.uploading;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Speed Test'),
@@ -196,136 +194,146 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            Text(
-              _getStatusText(),
-              style: TextStyle(
-                color: _status == SpeedTestStatus.completed ? AppTheme.primary : 
-                       _status == SpeedTestStatus.error ? AppTheme.error : AppTheme.onSurfaceVariant,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // Circular Speed Indicator
-            Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppTheme.surfaceContainerLow,
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5), width: 4),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: isTesting ? 0.3 : 0.1),
-                    blurRadius: isTesting ? 60 : 30,
-                    spreadRadius: isTesting ? 10 : 5,
-                  )
-                ]
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.speed, color: AppTheme.secondary.withValues(alpha: 0.8), size: 32),
-                    const SizedBox(height: 8),
-                    Text(
-                      _status == SpeedTestStatus.completed 
-                        ? _avgDownload.toStringAsFixed(1) 
-                        : _currentRate.toStringAsFixed(1),
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: AppTheme.primary,
-                        fontSize: 48,
-                        shadows: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.5), blurRadius: 15)],
-                      ),
-                    ),
-                    Text(_unitText, style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 14, letterSpacing: 2)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.padding, vertical: 16.0),
+          child: Column(
+            children: [
+              _buildUnifiedStage(),
+              const SizedBox(height: 120),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            // Live Graph
-            _buildGraph(),
-            const SizedBox(height: 32),
-
-            // Detailed Metrics Grid
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
-                ),
-                child: Column(
-                  children: [
-                    // Ping Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.network_ping, size: 20, color: AppTheme.primary),
-                        const SizedBox(width: 8),
-                        Text(
-                          'PING: ${_ping > 0 ? _ping.toStringAsFixed(0) : '--'} ms',
-                          style: const TextStyle(color: AppTheme.primary, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Container(height: 1, width: double.infinity, color: AppTheme.onSurfaceVariant.withValues(alpha: 0.2)),
-                    const SizedBox(height: 24),
-                    // Download & Upload
-                    Row(
-                      children: [
-                        Expanded(child: _buildMetricCol('DOWNLOAD', _avgDownload, _peakDownload, AppTheme.secondary)),
-                        Container(width: 1, height: 60, color: AppTheme.onSurfaceVariant.withValues(alpha: 0.2)),
-                        Expanded(child: _buildMetricCol('UPLOAD', _avgUpload, _peakUpload, AppTheme.tertiary)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+  Widget _buildUnifiedStage() {
+    return Column(
+      children: [
+        if (_status == SpeedTestStatus.error)
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 24),
+            decoration: AppTheme.cardDecoration(AppTheme.error),
+            child: const Text(
+              "Test Failed. Please check your connection and try again.",
+              style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
-            
-            const SizedBox(height: 40),
-
-            // Action Button
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: isTesting ? 0.0 : 0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  )
-                ]
-              ),
-              child: ElevatedButton(
-                onPressed: isTesting ? null : _startTesting,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  disabledBackgroundColor: AppTheme.surfaceVariant,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  elevation: 0,
+          ),
+        Text(
+          _getStatusText(),
+          style: const TextStyle(
+            color: AppTheme.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(height: 32),
+        Container(
+          width: 250,
+          height: 250,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppTheme.surfaceContainerLow,
+            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5), width: 4),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primary.withValues(alpha: 0.3),
+                blurRadius: 60,
+                spreadRadius: 10,
+              )
+            ]
+          ),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.speed, color: AppTheme.secondary.withValues(alpha: 0.8), size: 32),
+                const SizedBox(height: 8),
+                Text(
+                  _currentRate.toStringAsFixed(1),
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    color: AppTheme.primary,
+                    fontSize: 48,
+                    shadows: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.5), blurRadius: 15)],
+                  ),
                 ),
-                child: Text(
-                  isTesting ? 'TESTING IN PROGRESS' : 'START TEST',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1),
-                ),
-              ),
+                Text(_unitText, style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 14, letterSpacing: 2)),
+              ],
             ),
-            const SizedBox(height: 40),
-          ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        if (_status == SpeedTestStatus.downloading || _status == SpeedTestStatus.uploading || _status == SpeedTestStatus.completed)
+          _buildGraph(),
+        if (_status == SpeedTestStatus.downloading || _status == SpeedTestStatus.uploading || _status == SpeedTestStatus.completed)
+          const SizedBox(height: 32),
+        _buildMetricsGrid(),
+        const SizedBox(height: 48),
+        if (_status == SpeedTestStatus.ready || _status == SpeedTestStatus.error || _status == SpeedTestStatus.completed)
+          _buildActionButton(_status == SpeedTestStatus.completed ? "TEST AGAIN" : "START TEST", _startTesting),
+      ],
+    );
+  }
+
+  Widget _buildMetricsGrid() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: AppTheme.cardDecoration(AppTheme.primary),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.network_ping, size: 20, color: AppTheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'PING: ${_ping > 0 ? _ping.toStringAsFixed(0) : '--'} ms',
+                style: const TextStyle(color: AppTheme.primary, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Container(height: 1, width: double.infinity, color: AppTheme.onSurfaceVariant.withValues(alpha: 0.2)),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(child: _buildMetricCol('DOWNLOAD', _avgDownload, _peakDownload, AppTheme.secondary)),
+              Container(width: 1, height: 60, color: AppTheme.onSurfaceVariant.withValues(alpha: 0.2)),
+              Expanded(child: _buildMetricCol('UPLOAD', _avgUpload, _peakUpload, AppTheme.tertiary)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          )
+        ]
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.primary,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          elevation: 0,
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 1),
         ),
       ),
     );

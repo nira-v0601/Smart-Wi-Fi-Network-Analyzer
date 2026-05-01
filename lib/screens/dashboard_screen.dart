@@ -43,234 +43,223 @@ class DashboardScreen extends StatelessWidget {
       body: isLoading 
           ? const Center(child: CircularProgressIndicator()) 
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(AppTheme.padding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                    const Text(
-                     'NETWORK OVERVIEW',
+                     'NETWORK DETAILS',
                      style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.bold),
                    ),
-                   const SizedBox(height: 16),
-                   _buildMainSignalCard(context),
-                   const SizedBox(height: 24),
-                   const Text(
-                     'CONNECTION DETAILS',
-                     style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.bold),
-                   ),
-                   const SizedBox(height: 16),
-                   Row(
-                     children: [
-                       Expanded(child: _buildIpCard(context)),
-                       const SizedBox(width: 16),
-                       Expanded(child: _buildIspCard(context)),
-                     ],
-                   ),
+                   const SizedBox(height: AppTheme.cardSpacing),
+                   _buildMainWifiCard(context),
+                   const SizedBox(height: AppTheme.cardSpacing),
+                   _buildIpSubCard(context),
+                   const SizedBox(height: AppTheme.cardSpacing),
+                   _buildIspSubCard(context),
                    const SizedBox(height: 80), // For bottom nav
                 ],
               ),
-      ),
+            ),
     );
   }
 
-  Widget _buildMainSignalCard(BuildContext context) {
-    final wifiName = context.select((NetworkProvider p) => p.wifiName);
-    final currentRssi = context.select((NetworkProvider p) => p.currentRssi);
-    final frequency = context.select((NetworkProvider p) => p.frequency);
-    final linkSpeed = context.select((NetworkProvider p) => p.linkSpeed);
+
+  Widget _buildMainWifiCard(BuildContext context) {
+    final wifiName = context.select((NetworkProvider p) => p.wifiName) ?? 'N/A';
+    final frequency = context.select((NetworkProvider p) => p.frequency).toString();
+    final currentRssi = context.select((NetworkProvider p) => p.currentRssi).toString();
+    final linkSpeed = context.select((NetworkProvider p) => p.linkSpeed).toString();
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
+            AppTheme.primary.withValues(alpha: 0.15),
             AppTheme.surfaceContainerLow,
-            AppTheme.surfaceContainerLow.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.05),
+            color: AppTheme.primary.withValues(alpha: 0.1),
             blurRadius: 20,
-            spreadRadius: 2,
+            offset: const Offset(0, 10),
           )
-        ],
+        ]
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'CONNECTED NETWORK',
-            style: TextStyle(
-              color: AppTheme.onSurfaceVariant,
-              fontSize: 12,
-              letterSpacing: 2,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            wifiName ?? 'Wi-Fi is off/not connected',
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.secondary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.secondary.withValues(alpha: 0.3)),
+                  color: AppTheme.primary.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
                   boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.secondary.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                    )
-                  ],
+                    BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 10)
+                  ]
                 ),
-                child: Row(
+                child: const Icon(Icons.wifi, color: AppTheme.primary, size: 36),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 8, height: 8, 
-                      decoration: BoxDecoration(
-                        color: AppTheme.secondary, 
-                        shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: AppTheme.secondary, blurRadius: 4)],
-                      )
+                    const Text(
+                      'CURRENT NETWORK',
+                      style: TextStyle(color: AppTheme.primary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 2),
                     ),
-                    const SizedBox(width: 8),
-                    const Text('ACTIVE', style: TextStyle(color: AppTheme.secondary, fontSize: 12, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceVariant,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.verified_user, size: 16, color: AppTheme.onSurfaceVariant),
-                    const SizedBox(width: 8),
-                    Text('WPA3', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(
+                      wifiName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.onSurface,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatItem(context, 'Strength', wifiName != null ? currentRssi.toString() : 'N/A', wifiName != null ? 'dBm' : '', AppTheme.primary),
-              _buildStatItem(context, 'Freq', wifiName != null ? frequency.toString() : 'N/A', wifiName != null ? 'GHz' : '', AppTheme.secondary),
-              _buildStatItem(context, 'Speed', wifiName != null && linkSpeed > 0 ? linkSpeed.toString() : 'N/A', wifiName != null && linkSpeed > 0 ? 'Mbps' : '', AppTheme.tertiary),
+              Expanded(child: _buildWifiPill('Frequency', '$frequency GHz', Icons.speed)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildWifiPill('Signal', '$currentRssi dBm', Icons.network_check)),
             ],
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(BuildContext context, String title, String value, String unit, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title.toUpperCase(), style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
-        const SizedBox(height: 4),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(value, style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(width: 2),
-            Text(unit, style: TextStyle(color: color.withValues(alpha: 0.6), fontSize: 12)),
-          ],
-        )
-      ],
-    );
-  }
-
-  Widget _buildIpCard(BuildContext context) {
-    final wifiIP = context.select((NetworkProvider p) => p.wifiIP);
-    final publicIP = context.select((NetworkProvider p) => p.publicIP);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.tertiary.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(color: AppTheme.tertiary.withValues(alpha: 0.05), blurRadius: 10)
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.tertiary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.router, color: AppTheme.tertiary, size: 28),
           ),
-          const SizedBox(height: 16),
-          const Text('LOCAL IP (LAN)', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
-          const SizedBox(height: 4),
-          Text(wifiIP ?? 'Not Connected', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          const Text('PUBLIC IP (INTERNET)', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
-          const SizedBox(height: 4),
-          Text(publicIP ?? 'Detecting...', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          Row(
+            children: [
+              Expanded(child: _buildWifiPill('Security', 'WPA3', Icons.security)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildWifiPill('Link Speed', '$linkSpeed Mbps', Icons.swap_vert)),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildIspCard(BuildContext context) {
-    final wifiName = context.select((NetworkProvider p) => p.wifiName);
-    final ispName = context.select((NetworkProvider p) => p.ispName);
-    final ispType = context.select((NetworkProvider p) => p.ispType);
-    
+  Widget _buildWifiPill(String label, String value, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.secondary.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(color: AppTheme.secondary.withValues(alpha: 0.05), blurRadius: 10)
-        ],
+        color: AppTheme.surfaceContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.onSurfaceVariant.withValues(alpha: 0.1)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.secondary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.public, color: AppTheme.secondary, size: 28),
+          Row(
+            children: [
+              Icon(icon, size: 14, color: AppTheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Text(label, style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 11)),
+            ],
           ),
-          const SizedBox(height: 16),
-          const Text('ISP INFO', style: TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, letterSpacing: 1)),
-          const SizedBox(height: 8),
-          Text(ispName ?? (wifiName != null ? 'Local ISP' : 'N/A'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
-          Text(ispType ?? (wifiName != null ? 'Broadband' : 'Unknown'), style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 12), textAlign: TextAlign.center),
+          Text(value, style: const TextStyle(color: AppTheme.onSurface, fontWeight: FontWeight.bold, fontSize: 14)),
         ],
       ),
+    );
+  }
+
+  Widget _buildSubCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title.toUpperCase(),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: color,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIpSubCard(BuildContext context) {
+    final wifiIP = context.select((NetworkProvider p) => p.wifiIP) ?? 'N/A';
+    final publicIP = context.select((NetworkProvider p) => p.publicIP) ?? 'Detecting...';
+    
+    return _buildSubCard(
+      title: 'IP Information',
+      icon: Icons.router,
+      color: AppTheme.tertiary,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildWifiPill('Local IP', wifiIP, Icons.laptop_chromebook)),
+            const SizedBox(width: 12),
+            Expanded(child: _buildWifiPill('Public IP', publicIP, Icons.public)),
+          ],
+        ),
+      ]
+    );
+  }
+
+  Widget _buildIspSubCard(BuildContext context) {
+    final ispName = context.select((NetworkProvider p) => p.ispName) ?? 'N/A';
+    final ispType = context.select((NetworkProvider p) => p.ispType) ?? 'N/A';
+
+    return _buildSubCard(
+      title: 'ISP Information',
+      icon: Icons.business,
+      color: AppTheme.secondary,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildWifiPill('ISP Name', ispName, Icons.corporate_fare)),
+            const SizedBox(width: 12),
+            Expanded(child: _buildWifiPill('Connection', ispType, Icons.settings_ethernet)),
+          ],
+        ),
+      ]
     );
   }
 }

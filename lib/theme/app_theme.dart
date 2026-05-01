@@ -16,6 +16,28 @@ class AppTheme {
   static const Color onSurface = Color(0xFFF9FAFB);
   static const Color onSurfaceVariant = Color(0xFF9CA3AF);
 
+  // Layout Constants
+  static const double padding = 16.0;
+  static const double cardSpacing = 16.0;
+  static const double sectionSpacing = 24.0;
+  static const double borderRadius = 20.0;
+
+  // Global Card Decoration
+  static BoxDecoration cardDecoration([Color glowColor = primary]) {
+    return BoxDecoration(
+      color: surfaceContainerLow.withValues(alpha: 0.8),
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(color: glowColor.withValues(alpha: 0.2)),
+      boxShadow: [
+        BoxShadow(
+          color: glowColor.withValues(alpha: 0.05),
+          blurRadius: 15,
+          spreadRadius: 2,
+        )
+      ],
+    );
+  }
+
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,

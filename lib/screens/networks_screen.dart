@@ -29,7 +29,7 @@ class _NetworksScreenState extends State<NetworksScreen> {
       await WiFiScan.instance.startScan();
       final results = await WiFiScan.instance.getScannedResults();
       setState(() {
-        accessPoints = results;
+        accessPoints = results..sort((a, b) => b.level.compareTo(a.level));
         isScanning = false;
       });
     } else {
@@ -64,6 +64,7 @@ class _NetworksScreenState extends State<NetworksScreen> {
                   ap.ssid.isNotEmpty ? ap.ssid : 'Hidden Network',
                   ap.level,
                   ap.capabilities,
+                  ap.frequency,
                 );
               },
             ),
@@ -73,38 +74,36 @@ class _NetworksScreenState extends State<NetworksScreen> {
   Widget _buildMockList() {
     return ListView(
       children: [
-        _buildNetworkTile('NEON_FLUX_5G', -42, '[WPA3-ENTERPRISE]'),
-        _buildNetworkTile('Cyber_Mesh_2.4', -65, '[WPA2-PSK]'),
-        _buildNetworkTile('Guest_Link', -80, '[OPEN]'),
+        _buildNetworkTile('NEON_FLUX_5G', -42, '[WPA3-ENTERPRISE]', 5200),
+        _buildNetworkTile('Cyber_Mesh_2.4', -65, '[WPA2-PSK]', 2412),
+        _buildNetworkTile('Guest_Link', -80, '[OPEN]', 2462),
       ],
     );
   }
 
-  Widget _buildNetworkTile(String name, int rssi, String capability) {
+  Widget _buildNetworkTile(String name, int rssi, String capability, int freq) {
     Color signalColor = AppTheme.secondary;
     if (rssi < -70) {
       signalColor = AppTheme.error;
     } else if (rssi < -50) {
-      signalColor = Colors.orange;
+      signalColor = Colors.yellowAccent;
+    } else {
+      signalColor = Colors.greenAccent;
     }
 
+    int channel = 0;
+    if (freq >= 2412 && freq <= 2484) {
+      channel = ((freq - 2412) / 5).round() + 1;
+    } else if (freq >= 5170 && freq <= 5825) {
+      channel = ((freq - 5170) / 5).round() + 34;
+    }
+
+    String freqBand = freq > 5000 ? '5 GHz' : '2.4 GHz';
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceContainer.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.surfaceVariant.withValues(alpha: 0.5),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: signalColor.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.padding, vertical: 8),
+      padding: const EdgeInsets.all(AppTheme.padding),
+      decoration: AppTheme.cardDecoration(signalColor),
       child: Row(
         children: [
           Container(
@@ -113,10 +112,7 @@ class _NetworksScreenState extends State<NetworksScreen> {
               color: signalColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(
-                  color: signalColor.withValues(alpha: 0.2),
-                  blurRadius: 8,
-                ),
+                BoxShadow(color: signalColor.withValues(alpha: 0.2), blurRadius: 8),
               ],
             ),
             child: Icon(Icons.wifi, color: signalColor, size: 28),
@@ -131,10 +127,12 @@ class _NetworksScreenState extends State<NetworksScreen> {
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    color: AppTheme.onSurface,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  capability,
+                  '$capability • Ch $channel • $freqBand',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.onSurfaceVariant,
                     fontSize: 12,
@@ -143,24 +141,54 @@ class _NetworksScreenState extends State<NetworksScreen> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: signalColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: signalColor.withValues(alpha: 0.3)),
-            ),
-            child: Text(
-              '$rssi dBm',
-              style: TextStyle(
-                color: signalColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: signalColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: signalColor.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  '$rssi dBm',
+                  style: TextStyle(color: signalColor, fontWeight: FontWeight.bold, fontSize: 12),
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              _buildSignalBars(rssi, signalColor),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSignalBars(int rssi, Color color) {
+    int activeBars = 1;
+    if (rssi >= -50) {
+      activeBars = 4;
+    } else if (rssi >= -60) {
+      activeBars = 3;
+    } else if (rssi >= -70) {
+      activeBars = 2;
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: List.generate(4, (index) {
+        bool isActive = index < activeBars;
+        return Container(
+          margin: const EdgeInsets.only(left: 3),
+          width: 4,
+          height: 6.0 + (index * 4),
+          decoration: BoxDecoration(
+            color: isActive ? color : AppTheme.onSurfaceVariant.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        );
+      }),
     );
   }
 }

@@ -58,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: const Icon(Icons.dark_mode, color: AppTheme.primary),
                 ),
-                title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w500)),
+                title: const Text('Dark Mode', style: TextStyle(color: AppTheme.onSurface, fontWeight: FontWeight.w500)),
                 trailing: Switch(
                   value: themeProvider.isDarkMode,
                   activeThumbColor: AppTheme.primary,
@@ -75,12 +75,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: const Icon(Icons.history, color: AppTheme.primary),
                 ),
-                title: const Text('Speed Test History', style: TextStyle(fontWeight: FontWeight.w500)),
+                title: const Text('Speed Test History', style: TextStyle(color: AppTheme.onSurface, fontWeight: FontWeight.w500)),
                 trailing: const Icon(Icons.chevron_right, color: AppTheme.onSurfaceVariant),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SpeedTestHistoryScreen()),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildSettingsGroup(
+            'Network Info',
+            [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: AppTheme.secondary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.network_check, color: AppTheme.secondary),
+                ),
+                title: const Text('Advanced Network Details', style: TextStyle(color: AppTheme.onSurface, fontWeight: FontWeight.w500)),
+                trailing: const Icon(Icons.chevron_right, color: AppTheme.onSurfaceVariant),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NetworkInfoScreen()),
                   );
                 },
               ),
@@ -95,24 +117,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(color: AppTheme.tertiary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                  child: const Icon(Icons.info, color: AppTheme.tertiary),
-                ),
-                trailing: const Icon(Icons.chevron_right, color: AppTheme.onSurfaceVariant),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const NetworkInfoScreen()),
-                  );
-                },
-              ),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppTheme.tertiary.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: const Icon(Icons.system_update, color: AppTheme.tertiary),
                 ),
-                title: const Text('App Version', style: TextStyle(fontWeight: FontWeight.w500)),
+                title: const Text('App Version', style: TextStyle(color: AppTheme.onSurface, fontWeight: FontWeight.w500)),
                 trailing: Text(appVersion, style: const TextStyle(color: AppTheme.onSurfaceVariant, fontWeight: FontWeight.bold)),
               ),
             ],
@@ -134,18 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         Container(
-          decoration: BoxDecoration(
-            color: AppTheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              )
-            ]
-          ),
+          decoration: AppTheme.cardDecoration(AppTheme.primary),
           child: Column(
             children: items,
           ),

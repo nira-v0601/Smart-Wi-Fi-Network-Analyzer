@@ -92,11 +92,6 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ),
       ),
-      floatingActionButton: _currentIndex == 0 ? FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: AppTheme.primary,
-        child: const Icon(Icons.radar, color: Colors.white),
-      ) : null,
     );
   }
 }

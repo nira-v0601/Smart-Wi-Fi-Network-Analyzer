@@ -30,9 +30,24 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
   }
 
   String getSignalStatus(int rssi) {
-    if (rssi >= -50) return "Excellent 🟢";
-    if (rssi >= -70) return "Average 🟡";
+    if (rssi >= -50 && rssi < 0) return "Excellent 🟢";
+    if (rssi >= -60 && rssi < 0) return "Good 🟡";
+    if (rssi >= -70 && rssi < 0) return "Fair 🟠";
     return "Poor 🔴";
+  }
+
+  Color getSignalColor(int rssi) {
+    if (rssi == 0) return AppTheme.secondary;
+    if (rssi >= -50) return Colors.greenAccent;
+    if (rssi >= -70) return Colors.yellowAccent;
+    return AppTheme.error;
+  }
+
+  int getSignalQuality(int rssi) {
+    if (rssi == 0) return 0;
+    if (rssi >= -50) return 100;
+    if (rssi <= -100) return 0;
+    return 2 * (rssi + 100);
   }
 
   Widget _buildGraph(BuildContext context, List<int> rssiHistory) {
@@ -40,8 +55,9 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
     if (rssiHistory.isEmpty) {
       spots.add(const FlSpot(0, -100)); // Dummy spot to prevent FlChart crash on empty data
     } else {
-      for (int i = 0; i < rssiHistory.length; i++) {
-        spots.add(FlSpot(i.toDouble(), rssiHistory[i] == 0 ? -100 : rssiHistory[i].toDouble()));
+      int startIdx = rssiHistory.length > 30 ? rssiHistory.length - 30 : 0;
+      for (int i = startIdx; i < rssiHistory.length; i++) {
+        spots.add(FlSpot((i - startIdx).toDouble(), rssiHistory[i] == 0 ? -100 : rssiHistory[i].toDouble()));
       }
     }
 
@@ -57,14 +73,21 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
       child: LineChart(
         LineChartData(
           minX: 0,
-          maxX: 59,
+          maxX: 29,
           minY: -100,
           maxY: -20,
           gridData: FlGridData(
             show: true,
-            drawVerticalLine: false,
+            drawVerticalLine: true,
             horizontalInterval: 20,
+            verticalInterval: 5,
             getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: AppTheme.onSurface.withValues(alpha: 0.05),
+                strokeWidth: 1,
+              );
+            },
+            getDrawingVerticalLine: (value) {
               return FlLine(
                 color: AppTheme.onSurface.withValues(alpha: 0.05),
                 strokeWidth: 1,
@@ -143,19 +166,20 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
               AnimatedBuilder(
                 animation: _pulseController,
                 builder: (context, child) {
+                  final pulseColor = getSignalColor(currentRssi);
                   return Container(
                     width: 180,
                     height: 180,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppTheme.secondary.withValues(alpha: 0.05),
+                      color: pulseColor.withValues(alpha: 0.05),
                       border: Border.all(
-                        color: AppTheme.secondary.withValues(alpha: _pulseController.value * 0.8 + 0.2),
+                        color: pulseColor.withValues(alpha: _pulseController.value * 0.8 + 0.2),
                         width: 4 + (_pulseController.value * 12),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.secondary.withValues(alpha: _pulseController.value * 0.3),
+                          color: pulseColor.withValues(alpha: _pulseController.value * 0.3),
                           blurRadius: 40 * _pulseController.value,
                           spreadRadius: 10 * _pulseController.value,
                         )
@@ -168,16 +192,16 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
                           Text(
                             currentRssi != 0 ? '$currentRssi' : '--',
                             style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                                  color: AppTheme.secondary,
+                                  color: pulseColor,
                                   fontSize: 56,
                                   fontWeight: FontWeight.bold,
-                                  shadows: [BoxShadow(color: AppTheme.secondary.withValues(alpha: 0.5), blurRadius: 20)],
+                                  shadows: [BoxShadow(color: pulseColor.withValues(alpha: 0.5), blurRadius: 20)],
                                 ),
                           ),
                           Text(
                             'dBm',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppTheme.secondary.withValues(alpha: 0.7),
+                              color: pulseColor.withValues(alpha: 0.7),
                               letterSpacing: 2,
                             ),
                           )
@@ -227,10 +251,13 @@ class _SignalScreenState extends State<SignalScreen> with SingleTickerProviderSt
               // FlChart Graph
               _buildGraph(context, rssiHistory),
               const SizedBox(height: 24),
+              const SizedBox(height: 100),
             ],
           ),
         ),
       ),
     );
   }
+
+
 }
