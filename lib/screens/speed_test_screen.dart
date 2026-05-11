@@ -3,7 +3,9 @@ import 'package:smart_wifi_analyzer/theme/app_theme.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math' as math;
 import 'package:smart_wifi_analyzer/services/speed_test_service.dart';
+import 'package:smart_wifi_analyzer/services/speed_test/models.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+
 class SpeedTestScreen extends StatefulWidget {
   const SpeedTestScreen({super.key});
 
@@ -28,6 +30,9 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
   double _avgDownload = 0;
   double _avgUpload = 0;
   double _ping = 0;
+  double _jitter = 0;
+  double _packetLoss = 0;
+  ServerInfo? _activeServer;
 
   @override
   void initState() {
@@ -35,9 +40,21 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
     speedTestService.onStatusChange = (status) {
       if (mounted) setState(() => _status = status);
     };
-    speedTestService.onPing = (ping) {
-      if (mounted) setState(() => _ping = ping);
+    
+    speedTestService.onServerSelected = (server) {
+      if (mounted) setState(() => _activeServer = server);
     };
+
+    speedTestService.onPingDetails = (pingResult) {
+      if (mounted) {
+        setState(() {
+          _ping = pingResult.medianPing;
+          _jitter = pingResult.jitter;
+          _packetLoss = pingResult.packetLoss;
+        });
+      }
+    };
+
     speedTestService.onDownloadProgress = (speed, percent) {
       if (mounted) {
         setState(() {
@@ -45,13 +62,13 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
           _currentPercent = percent;
           _downloadData.add(speed);
           if (speed > _peakDownload) _peakDownload = speed;
-          // Dynamically compute average up to this point
           if (_downloadData.isNotEmpty) {
              _avgDownload = _downloadData.reduce((a, b) => a + b) / _downloadData.length;
           }
         });
       }
     };
+    
     speedTestService.onUploadProgress = (speed, percent) {
       if (mounted) {
         setState(() {
@@ -59,24 +76,27 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
           _currentPercent = percent;
           _uploadData.add(speed);
           if (speed > _peakUpload) _peakUpload = speed;
-          // Dynamically compute average up to this point
           if (_uploadData.isNotEmpty) {
              _avgUpload = _uploadData.reduce((a, b) => a + b) / _uploadData.length;
           }
         });
       }
     };
-    speedTestService.onCompleted = (ping, dl, ul) {
+    
+    speedTestService.onCompleted = (metrics) {
       if (mounted) {
         setState(() {
-          _ping = ping;
-          _avgDownload = dl;
-          _avgUpload = ul;
+          _ping = metrics.ping;
+          _jitter = metrics.jitter;
+          _packetLoss = metrics.packetLoss;
+          _avgDownload = metrics.downloadSpeed;
+          _avgUpload = metrics.uploadSpeed;
           _currentRate = 0;
           _currentPercent = 100;
         });
       }
     };
+    
     speedTestService.onError = (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -105,12 +125,14 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
       _avgDownload = 0;
       _avgUpload = 0;
       _ping = 0;
+      _jitter = 0;
+      _packetLoss = 0;
       _downloadData.clear();
       _uploadData.clear();
+      _activeServer = null;
     });
     speedTestService.startTest();
   }
-
 
   String _getStatusText() {
     switch (_status) {
@@ -235,6 +257,17 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
             letterSpacing: 2,
           ),
         ),
+        if (_activeServer != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            'SERVER: ${_activeServer!.name}',
+            style: const TextStyle(
+              color: AppTheme.onSurfaceVariant,
+              fontSize: 12,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
         const SizedBox(height: 32),
         Container(
           width: 250,
@@ -293,14 +326,11 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              const Icon(Icons.network_ping, size: 20, color: AppTheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                'PING: ${_ping > 0 ? _ping.toStringAsFixed(0) : '--'} ms',
-                style: const TextStyle(color: AppTheme.primary, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
-              ),
+              _buildSmallMetric('PING', _ping > 0 ? '${_ping.toStringAsFixed(0)} ms' : '--'),
+              _buildSmallMetric('JITTER', _jitter > 0 ? '${_jitter.toStringAsFixed(0)} ms' : '--'),
+              _buildSmallMetric('LOSS', _packetLoss > 0 ? '${_packetLoss.toStringAsFixed(1)}%' : '--'),
             ],
           ),
           const SizedBox(height: 24),
@@ -315,6 +345,16 @@ class _SpeedTestScreenState extends State<SpeedTestScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSmallMetric(String title, String value) {
+    return Column(
+      children: [
+        Text(title, style: const TextStyle(color: AppTheme.onSurfaceVariant, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(color: AppTheme.primary, fontSize: 14, fontWeight: FontWeight.bold)),
+      ],
     );
   }
 

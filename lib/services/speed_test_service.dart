@@ -1,133 +1,103 @@
 import 'dart:async';
 import 'dart:convert';
-
-import 'package:flutter_internet_speed_test_plus/flutter_internet_speed_test_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+import 'package:smart_wifi_analyzer/services/speed_test/bandwidth_engine.dart';
+import 'package:smart_wifi_analyzer/services/speed_test/models.dart';
+import 'package:smart_wifi_analyzer/services/speed_test/ping_test.dart';
 
+// Maintain original enum names to minimize screen breakage, plus our new mappings
 enum SpeedTestStatus { ready, selectingServer, pinging, downloading, uploading, completed, error }
 
 class SpeedTestService {
-  final _speedTest = FlutterInternetSpeedTest();
+  final _engine = BandwidthEngine();
   bool _isTesting = false;
   SpeedTestStatus _status = SpeedTestStatus.ready;
 
   Function(SpeedTestStatus)? onStatusChange;
   Function(double)? onPing;
-  // Now passing rate (Mbps) and percentage (0-100)
+  Function(PingResult)? onPingDetails;
   Function(double, double)? onDownloadProgress;
   Function(double, double)? onUploadProgress;
-  Function(double, double, double)? onCompleted; // ping, dl, ul
+  Function(SpeedMetrics)? onCompleted; 
   Function(String)? onError;
+  Function(ServerInfo)? onServerSelected;
 
-  double _ping = 0;
-  double _finalDownload = 0;
-  double _finalUpload = 0;
+  SpeedTestService() {
+    _engine.onStateChange = (EngineState state) {
+      SpeedTestStatus mappedStatus = _mapState(state);
+      if (mappedStatus != _status) {
+        _status = mappedStatus;
+        onStatusChange?.call(_status);
+      }
+    };
+    
+    _engine.onServerSelected = (server) {
+      onServerSelected?.call(server);
+    };
+
+    _engine.onPingComplete = (pingResult) {
+      onPing?.call(pingResult.medianPing);
+      onPingDetails?.call(pingResult);
+    };
+
+    _engine.onDownloadProgress = (progress) {
+      onDownloadProgress?.call(progress.transferRateMbps, progress.percent);
+    };
+
+    _engine.onUploadProgress = (progress) {
+      onUploadProgress?.call(progress.transferRateMbps, progress.percent);
+    };
+
+    _engine.onCompleted = (metrics) {
+      _saveResultToHistory(metrics);
+      _isTesting = false;
+      onCompleted?.call(metrics);
+    };
+
+    _engine.onError = (errorStr) {
+      _isTesting = false;
+      onError?.call(errorStr);
+    };
+  }
+
+  SpeedTestStatus _mapState(EngineState state) {
+    switch (state) {
+      case EngineState.ready: return SpeedTestStatus.ready;
+      case EngineState.selectingServer: return SpeedTestStatus.selectingServer;
+      case EngineState.pinging: return SpeedTestStatus.pinging;
+      case EngineState.downloading: return SpeedTestStatus.downloading;
+      case EngineState.uploading: return SpeedTestStatus.uploading;
+      case EngineState.completed: return SpeedTestStatus.completed;
+      case EngineState.error: return SpeedTestStatus.error;
+    }
+  }
 
   void stop() {
     _isTesting = false;
-    _speedTest.cancelTest();
-    _updateStatus(SpeedTestStatus.ready);
-  }
-
-  void _updateStatus(SpeedTestStatus status) {
-    if (status != _status) {
-      _status = status;
-      onStatusChange?.call(_status);
-    }
+    _engine.stop();
   }
 
   Future<void> startTest() async {
     if (_isTesting) return;
     _isTesting = true;
-    _ping = 0;
-    _finalDownload = 0;
-    _finalUpload = 0;
-
-    _updateStatus(SpeedTestStatus.selectingServer);
-
-    // flutter_internet_speed_test_plus supports auto-selection via fast.com infrastructure
-    _speedTest.startTesting(
-      useFastApi: true,
-      onStarted: () {
-        _updateStatus(SpeedTestStatus.downloading);
-      },
-      onCompleted: (TestResult download, TestResult upload) {
-        _updateStatus(SpeedTestStatus.completed);
-        _finalDownload = download.transferRate;
-        _finalUpload = upload.transferRate;
-        onCompleted?.call(_ping, _finalDownload, _finalUpload);
-        _saveResultToHistory(_ping, _finalDownload, _finalUpload);
-        _isTesting = false;
-      },
-      onProgress: (double percent, TestResult data) {
-        if (data.type == TestType.download) {
-          _updateStatus(SpeedTestStatus.downloading);
-          onDownloadProgress?.call(data.transferRate, percent);
-        } else {
-          _updateStatus(SpeedTestStatus.uploading);
-          onUploadProgress?.call(data.transferRate, percent);
-        }
-      },
-      onError: (String errorMessage, String speedTestError) {
-        _updateStatus(SpeedTestStatus.error);
-        onError?.call("Error: $errorMessage. $speedTestError. Server Busy or Timeout.");
-        _isTesting = false;
-      },
-      onDefaultServerSelectionInProgress: () {
-        _updateStatus(SpeedTestStatus.selectingServer);
-      },
-      onDefaultServerSelectionDone: (Client? client) async {
-        _updateStatus(SpeedTestStatus.pinging);
-        // Fallback simulated ping since fast.com client might not provide precise ICMP ping easily
-        _ping = await _measureMedianPing("https://fast.com", samples: 3);
-        if (_ping <= 0) _ping = 25.0; // Simulated default
-        onPing?.call(_ping);
-        _updateStatus(SpeedTestStatus.downloading);
-      },
-      onDownloadComplete: (TestResult data) {
-        _finalDownload = data.transferRate;
-      },
-      onUploadComplete: (TestResult data) {
-        _finalUpload = data.transferRate;
-      },
-      onCancel: () {
-        _isTesting = false;
-        _updateStatus(SpeedTestStatus.ready);
-      },
-    );
+    _status = SpeedTestStatus.selectingServer;
+    onStatusChange?.call(_status);
+    await _engine.startTest();
   }
 
-  Future<double> _measureMedianPing(String url, {int samples = 3}) async {
-    List<double> pings = [];
-    for (int i = 0; i < samples; i++) {
-      if (!_isTesting) break;
-      final sw = Stopwatch()..start();
-      try {
-        final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 3)); // Handle timeout gracefully
-        sw.stop();
-        if (res.statusCode >= 200 && res.statusCode < 400) {
-          pings.add(sw.elapsedMilliseconds.toDouble());
-        }
-      } catch (_) {
-        // Ignore timeouts/errors here to not crash the app, handle gracefully
-      }
-    }
-
-    if (pings.isEmpty) return -1;
-    pings.sort();
-    return pings[pings.length ~/ 2]; // Median
-  }
-
-  Future<void> _saveResultToHistory(double ping, double dl, double ul) async {
+  Future<void> _saveResultToHistory(SpeedMetrics metrics) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       List<String> history = prefs.getStringList('speed_test_history') ?? [];
       final newEntry = {
         'timestamp': DateTime.now().toIso8601String(),
-        'ping': ping,
-        'download': dl,
-        'upload': ul,
+        'ping': metrics.ping,
+        'jitter': metrics.jitter,
+        'packetLoss': metrics.packetLoss,
+        'download': metrics.downloadSpeed,
+        'upload': metrics.uploadSpeed,
+        'server': metrics.server.name,
+        'isp': metrics.isp,
       };
       history.add(json.encode(newEntry));
       if (history.length > 20) history.removeAt(0); // keep last 20

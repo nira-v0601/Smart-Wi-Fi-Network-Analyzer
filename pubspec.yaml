@@ -47,8 +47,6 @@ dependencies:
   intl: ^0.20.2
   flutter_displaymode: ^0.7.0
   flutter_animate: ^4.5.2
-  flutter_internet_speed_test_plus:
-    path: packages/flutter_internet_speed_test_plus
 
 dev_dependencies:
   flutter_test:
