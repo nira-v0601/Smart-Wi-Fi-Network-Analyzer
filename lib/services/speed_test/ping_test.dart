@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 class PingResult {
   final double medianPing;
@@ -21,7 +20,7 @@ class PingTest {
     for (int i = 0; i < attempts; i++) {
       try {
         final stopwatch = Stopwatch()..start();
-        final socket = await Socket.connect(host, 443, timeout: const Duration(seconds: 2));
+        final socket = await Socket.connect(host, 80, timeout: const Duration(seconds: 2));
         stopwatch.stop();
         socket.destroy();
         pings.add(stopwatch.elapsedMilliseconds.toDouble());
@@ -43,7 +42,6 @@ class PingTest {
       pings.removeLast(); // Remove highest
     }
 
-    // Calculate median
     pings.sort();
     double medianPing = 0;
     if (pings.isNotEmpty) {
@@ -55,7 +53,6 @@ class PingTest {
       }
     }
 
-    // Calculate jitter
     double jitter = 0;
     if (pings.length > 1) {
       double sumDiff = 0;

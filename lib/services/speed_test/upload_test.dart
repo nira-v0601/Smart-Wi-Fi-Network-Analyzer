@@ -1,145 +1,128 @@
 import 'dart:async';
-import 'dart:isolate';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
-
-class UploadTestConfig {
-  final String url;
-  final int streams;
-  final SendPort sendPort;
-
-  UploadTestConfig(this.url, this.streams, this.sendPort);
-}
+import 'dart:developer' as developer;
 
 class UploadTest {
   static Future<void> runTest(String testUrl, Function(double, double) onProgress, Function(double) onComplete) async {
-    final receivePort = ReceivePort();
-    
-    // We'll use 4-6 streams for upload
-    final config = UploadTestConfig(testUrl, 4, receivePort.sendPort);
-    
-    final isolate = await Isolate.spawn(_uploadIsolate, config);
-    
-    double finalSpeed = 0;
-    
-    await for (final message in receivePort) {
-      if (message is Map) {
-        if (message['type'] == 'progress') {
-          onProgress(message['speed'], message['percent']);
-        } else if (message['type'] == 'complete') {
-          finalSpeed = message['speed'];
-          receivePort.close();
-          break;
-        } else if (message['type'] == 'error') {
-          receivePort.close();
-          throw Exception(message['error']);
-        }
-      }
-    }
-    
-    isolate.kill(priority: Isolate.immediate);
-    onComplete(finalSpeed);
-  }
-
-  static void _uploadIsolate(UploadTestConfig config) async {
+    final completer = Completer<void>();
+    const int numWorkers = 4;
     final httpClient = HttpClient();
     httpClient.connectionTimeout = const Duration(seconds: 5);
     
-    List<HttpClientRequest> requests = [];
+    // Anti-Bot Bypass Headers
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36';
+    httpClient.userAgent = userAgent;
     
     bool isRunning = true;
     int totalBytesWritten = 0;
-    int previousBytesWritten = 0;
-    List<double> throughputSamples = [];
+    int previousTotalBytes = 0;
+    int consecutiveErrors = 0;
     
     final stopwatch = Stopwatch()..start();
-    final testDuration = const Duration(seconds: 10);
-    final warmupDuration = const Duration(seconds: 2);
+    const testDuration = Duration(seconds: 10);
+    const warmupDuration = Duration(seconds: 2);
     
+    double smoothedSpeedMbps = 0.0;
+    List<double> validSamples = [];
     final random = Random();
     
-    // Generate a 1MB payload in memory
+    developer.log('UploadTest Async: Starting test with $numWorkers streams', name: 'UploadTest');
+
     final payload = Uint8List(1024 * 1024);
     for (int i = 0; i < payload.length; i++) {
       payload[i] = random.nextInt(256);
     }
-    
-    Future<void> startStream() async {
+
+    Future<void> startStream(int workerId) async {
       try {
-        final urlWithParam = Uri.parse('${config.url}?r=${random.nextInt(1000000)}');
-        final request = await httpClient.postUrl(urlWithParam);
-        request.headers.contentLength = -1; // Chunked transfer
-        requests.add(request);
+        final separator = testUrl.contains('?') ? '&' : '?';
+        final urlWithParam = Uri.parse('$testUrl${separator}r=${random.nextInt(1000000)}&w=$workerId');
         
-        // Continuously write payload to stream while running
+        final request = await httpClient.postUrl(urlWithParam);
+        request.headers.set(HttpHeaders.acceptHeader, '*/*');
+        request.headers.contentLength = -1; // Chunked transfer
+        
         while (isRunning) {
           request.add(payload);
           await request.flush(); // ensure it gets sent
           totalBytesWritten += payload.length;
-          // small delay to prevent blocking the isolate loop entirely
+          consecutiveErrors = 0;
+          // Yield to UI thread to prevent jank
           await Future.delayed(const Duration(milliseconds: 10)); 
         }
         
         await request.close();
       } catch (e) {
-        // Stream failed or closed
+        developer.log('UploadTest Async: Stream error: $e', name: 'UploadTest');
+        if (isRunning) {
+          consecutiveErrors++;
+          if (consecutiveErrors > 10) {
+             isRunning = false;
+             if (!completer.isCompleted) completer.completeError(Exception('Internet connection lost.'));
+             return;
+          }
+          await Future.delayed(const Duration(milliseconds: 500));
+          startStream(workerId);
+        }
       }
     }
 
-    // Start upload streams
-    for (int i = 0; i < config.streams; i++) {
-      startStream();
+    for (int i = 0; i < numWorkers; i++) {
+      startStream(i);
     }
-    
+
     Timer.periodic(const Duration(milliseconds: 250), (timer) {
       if (!isRunning) {
         timer.cancel();
         return;
       }
+
+      int bytesDiff = totalBytesWritten - previousTotalBytes;
+      previousTotalBytes = totalBytesWritten;
       
-      final elapsed = stopwatch.elapsed;
+      double instantSpeedMbps = (bytesDiff * 8) / (250 / 1000.0) / 1000000.0;
       
-      if (elapsed > testDuration) {
+      if (instantSpeedMbps.isNaN || instantSpeedMbps.isInfinite || instantSpeedMbps < 0) {
+        instantSpeedMbps = 0.0;
+      }
+
+      if (smoothedSpeedMbps == 0.0 && instantSpeedMbps > 0) {
+        smoothedSpeedMbps = instantSpeedMbps;
+      } else {
+        smoothedSpeedMbps = (smoothedSpeedMbps * 0.7) + (instantSpeedMbps * 0.3);
+      }
+
+      developer.log('UploadTest Async: Instant: $instantSpeedMbps Mbps, Smoothed: $smoothedSpeedMbps Mbps', name: 'UploadTest');
+
+      if (stopwatch.elapsed > warmupDuration) {
+        validSamples.add(smoothedSpeedMbps);
+      }
+
+      double percent = (stopwatch.elapsedMilliseconds / testDuration.inMilliseconds) * 100;
+      if (percent > 100) percent = 100;
+
+      onProgress(smoothedSpeedMbps, percent);
+
+      if (stopwatch.elapsed >= testDuration) {
         isRunning = false;
         timer.cancel();
         
-        double finalSpeed = 0;
-        if (throughputSamples.isNotEmpty) {
-          throughputSamples.sort();
-          int middle = throughputSamples.length ~/ 2;
-          finalSpeed = throughputSamples[middle];
+        double finalSpeed = smoothedSpeedMbps;
+        if (validSamples.isNotEmpty) {
+          validSamples.sort();
+          finalSpeed = validSamples[validSamples.length ~/ 2];
         }
         
-        config.sendPort.send({
-          'type': 'complete',
-          'speed': finalSpeed,
-        });
+        developer.log('UploadTest Async: Test completed. Final Median Mbps: $finalSpeed', name: 'UploadTest');
         
-        for (var req in requests) {
-          req.abort();
-        }
         httpClient.close(force: true);
-        return;
+        onComplete(finalSpeed);
+        if (!completer.isCompleted) completer.complete();
       }
-      
-      int bytesDiff = totalBytesWritten - previousBytesWritten;
-      previousBytesWritten = totalBytesWritten;
-      
-      double currentSpeedMbps = (bytesDiff * 8 / 1000000) * 4;
-      
-      if (elapsed > warmupDuration) {
-        throughputSamples.add(currentSpeedMbps);
-      }
-      
-      double percent = (elapsed.inMilliseconds / testDuration.inMilliseconds) * 100;
-      if (percent > 100) percent = 100;
-      
-      config.sendPort.send({
-        'type': 'progress',
-        'speed': currentSpeedMbps,
-        'percent': percent,
-      });
     });
+
+    return completer.future;
   }
 }

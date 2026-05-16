@@ -1,23 +1,27 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:smart_wifi_analyzer/services/speed_test/models.dart';
+import 'dart:developer' as developer;
 
 class ServerSelection {
   static const List<ServerInfo> fallbackServers = [
     ServerInfo(
-      name: 'Cloudflare',
-      host: 'cloudflare.com',
-      url: 'https://cloudflare.com/cdn-cgi/trace',
+      name: 'Tele2 Speedtest',
+      host: 'speedtest.tele2.net',
+      downloadUrl: 'http://speedtest.tele2.net/100MB.zip',
+      uploadUrl: 'http://speedtest.tele2.net/upload.php',
     ),
     ServerInfo(
-      name: 'Google',
-      host: 'google.com',
-      url: 'https://google.com/generate_204',
+      name: 'ThinkBroadband',
+      host: 'ipv4.download.thinkbroadband.com',
+      downloadUrl: 'http://ipv4.download.thinkbroadband.com/100MB.zip',
+      uploadUrl: 'http://ipv4.download.thinkbroadband.com/100MB.zip',
     ),
     ServerInfo(
-      name: 'Apple',
-      host: 'apple.com',
-      url: 'https://apple.com/library/test/success.html',
+      name: 'Cloudflare Edge',
+      host: 'speed.cloudflare.com',
+      downloadUrl: 'https://speed.cloudflare.com/__down?bytes=50000000',
+      uploadUrl: 'https://speed.cloudflare.com/__up',
     ),
   ];
 
@@ -28,20 +32,28 @@ class ServerSelection {
     for (final server in fallbackServers) {
       try {
         final stopwatch = Stopwatch()..start();
-        final socket = await Socket.connect(server.host, 443, timeout: const Duration(seconds: 2));
+        int port = server.downloadUrl.startsWith('https') ? 443 : 80;
+        final socket = await Socket.connect(server.host, port, timeout: const Duration(seconds: 2));
         stopwatch.stop();
         socket.destroy();
 
         double latency = stopwatch.elapsedMilliseconds.toDouble();
+        developer.log('ServerSelection: ${server.name} latency = $latency ms', name: 'ServerSelection');
+        
         if (latency < lowestLatency) {
           lowestLatency = latency;
           bestServer = server;
         }
-      } catch (_) {
-        // Ignore unreachable servers
+      } catch (e) {
+        developer.log('ServerSelection: Failed to connect to ${server.name}: $e', name: 'ServerSelection');
       }
     }
 
+    if (lowestLatency == double.infinity) {
+      throw Exception('No internet connection. All servers unreachable.');
+    }
+
+    developer.log('ServerSelection: Best server selected = ${bestServer.name}', name: 'ServerSelection');
     return bestServer;
   }
 }

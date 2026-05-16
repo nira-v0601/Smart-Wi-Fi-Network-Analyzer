@@ -3,14 +3,16 @@ import 'package:flutter/foundation.dart';
 class ServerInfo {
   final String name;
   final String host;
-  final String url;
+  final String downloadUrl;
+  final String uploadUrl;
   final double latitude;
   final double longitude;
 
   const ServerInfo({
     required this.name,
     required this.host,
-    required this.url,
+    required this.downloadUrl,
+    required this.uploadUrl,
     this.latitude = 0.0,
     this.longitude = 0.0,
   });
