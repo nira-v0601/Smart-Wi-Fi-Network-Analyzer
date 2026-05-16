@@ -21,7 +21,8 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
   String? _wifiIP;
   int _currentRssi = 0;
   String _frequency = "0";
-  final int _linkSpeed = 0;
+  String _wifiVersion = "Unknown";
+  String _securityProtocol = "Open";
   final List<int> _rssiHistory = [];
   
   String? _ispName;
@@ -36,7 +37,8 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
   String? get wifiIP => _wifiIP;
   int get currentRssi => _currentRssi;
   String get frequency => _frequency;
-  int get linkSpeed => _linkSpeed;
+  String get wifiVersion => _wifiVersion;
+  String get securityProtocol => _securityProtocol;
   List<int> get rssiHistory => _rssiHistory;
   String? get ispName => _ispName;
   String? get ispType => _ispType;
@@ -91,6 +93,8 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
       _ispType = null;
       _currentRssi = 0;
       _frequency = "0";
+      _wifiVersion = "Unknown";
+      _securityProtocol = "Open";
     } else {
       _fetchISPInfo();
     }
@@ -144,6 +148,49 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  String _parseSecurity(String caps) {
+    if (caps.isEmpty) return "Unknown";
+    final c = caps.toUpperCase();
+    if ((c.contains('WPA3') || c.contains('SAE')) && c.contains('WPA2')) {
+      return "WPA2/WPA3 Transitional";
+    } else if (c.contains('WPA3') || c.contains('SAE')) {
+      return "WPA3";
+    } else if (c.contains('EAP')) {
+      return "Enterprise";
+    } else if (c.contains('WPA2') || c.contains('RSN')) {
+      return "WPA2";
+    } else if (c.contains('WPA')) {
+      return "WPA";
+    } else if (c.contains('WEP')) {
+      return "WEP";
+    } else if (c.contains('ESS') && !c.contains('WPA') && !c.contains('WEP') && !c.contains('RSN')) {
+      return "Open";
+    }
+    return "Open";
+  }
+
+  String _parseWifiVersion(dynamic standard, int freq) {
+    String stdStr = standard.toString().toLowerCase();
+    if (stdStr.contains('legacy')) return "Legacy";
+    if (stdStr.contains('11n')) return "Wi-Fi 4";
+    if (stdStr.contains('11ac')) return "Wi-Fi 5";
+    if (stdStr.contains('11ax')) return freq > 5950 ? "Wi-Fi 6E" : "Wi-Fi 6";
+    if (stdStr.contains('11be')) return "Wi-Fi 7";
+    if (stdStr.contains('11ad')) return "WiGig";
+
+    if (stdStr == '1') return "Legacy";
+    if (stdStr == '4') return "Wi-Fi 4";
+    if (stdStr == '5') return "Wi-Fi 5";
+    if (stdStr == '6') return freq > 5950 ? "Wi-Fi 6E" : "Wi-Fi 6";
+    if (stdStr == '8') return "Wi-Fi 7";
+
+    // Fallback logic
+    if (freq > 5950) return "Wi-Fi 6E";
+    if (freq > 5000) return "Wi-Fi 5";
+    if (freq > 0) return "Wi-Fi 4";
+    return "Unknown";
+  }
+
   void _startSignalPolling() {
     _scanSubscription?.cancel();
     _scanSubscription = _wifiService.scannedResultsStream.listen((results) {
@@ -163,6 +210,8 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
           } else {
             _frequency = "6";
           }
+          _wifiVersion = _parseWifiVersion(ap.standard, ap.frequency);
+          _securityProtocol = _parseSecurity(ap.capabilities);
           notifyListeners();
           break;
         }
@@ -184,7 +233,7 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
     });
 
     _connectionCheckTimer?.cancel();
-    _connectionCheckTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+    _connectionCheckTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
       String? newName = await _wifiService.getWifiName();
       String? newIP = await _getLocalIP();
       
@@ -197,6 +246,8 @@ class NetworkProvider extends ChangeNotifier with WidgetsBindingObserver {
         if (_wifiName == null) {
           _currentRssi = 0;
           _frequency = "0";
+          _wifiVersion = "Unknown";
+          _securityProtocol = "Open";
           _ispName = null;
           _ispType = null;
           _publicIP = null;
