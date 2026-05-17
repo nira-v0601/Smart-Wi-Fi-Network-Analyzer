@@ -72,8 +72,6 @@ class DashboardScreen extends StatelessWidget {
     final currentRssi = context.select((NetworkProvider p) => p.currentRssi).toString();
     final wifiVersion = context.select((NetworkProvider p) => p.wifiVersion);
     final security = context.select((NetworkProvider p) => p.securityProtocol);
-    final ispName = context.select((NetworkProvider p) => p.ispName) ?? 'Unknown ISP';
-    final wifiIP = context.select((NetworkProvider p) => p.wifiIP) ?? 'N/A';
 
     return Container(
       width: double.infinity,
