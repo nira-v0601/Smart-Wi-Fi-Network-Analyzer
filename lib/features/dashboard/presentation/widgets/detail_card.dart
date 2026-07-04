@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_theme.dart';
 
 class DetailCard extends StatelessWidget {
   final IconData icon;
@@ -16,9 +15,11 @@ class DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(12),
@@ -28,13 +29,13 @@ class DetailCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: AppTheme.primary, size: 20),
+              Icon(icon, color: theme.colorScheme.primary, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   label,
                   style: GoogleFonts.inter(
-                    color: AppTheme.textSecondary,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -46,7 +47,7 @@ class DetailCard extends StatelessWidget {
           Text(
             value,
             style: GoogleFonts.rajdhani(
-              color: AppTheme.textPrimary,
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),

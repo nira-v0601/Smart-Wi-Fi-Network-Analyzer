@@ -5,10 +5,12 @@ class SpeedometerPainter extends CustomPainter {
   final double percent;
   final Color activeColor;
   final bool useGradient;
+  final Color backgroundColor;
 
   SpeedometerPainter({
     required this.percent,
     required this.activeColor,
+    required this.backgroundColor,
     this.useGradient = false,
   });
 
@@ -22,7 +24,7 @@ class SpeedometerPainter extends CustomPainter {
 
     // Draw background arc
     final bgPaint = Paint()
-      ..color = const Color(0xFF1E2A45)
+      ..color = backgroundColor
       ..strokeWidth = 20
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -87,6 +89,7 @@ class SpeedometerPainter extends CustomPainter {
   bool shouldRepaint(covariant SpeedometerPainter oldDelegate) {
     return oldDelegate.percent != percent ||
            oldDelegate.activeColor != activeColor ||
+           oldDelegate.backgroundColor != backgroundColor ||
            oldDelegate.useGradient != useGradient;
   }
 }

@@ -82,8 +82,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1120), // Match the app's dark theme
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -124,7 +126,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     style: GoogleFonts.rajdhani(
                       fontSize: 34,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       letterSpacing: 2.0,
                     ),
                   ),
@@ -133,7 +135,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     style: GoogleFonts.rajdhani(
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white70,
+                      color: theme.colorScheme.onSurfaceVariant,
                       letterSpacing: 4.0,
                     ),
                   ),

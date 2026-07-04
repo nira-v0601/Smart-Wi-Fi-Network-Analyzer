@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/signal_colors.dart';
 import '../../data/models/access_point_model.dart';
 import 'signal_bars_widget.dart';
@@ -12,13 +11,14 @@ class AccessPointNetworkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final signalColor = SignalColors.fromRssi(network.rssi);
 
-    Color securityColor = AppTheme.border;
+    Color securityColor = theme.colorScheme.outline;
     if (network.securityType == 'WPA3') {
-      securityColor = AppTheme.secondary;
+      securityColor = theme.colorScheme.secondary;
     } else if (network.securityType == 'WPA2') {
-      securityColor = AppTheme.primary;
+      securityColor = theme.colorScheme.primary;
     } else if (network.securityType == 'Open') {
       securityColor = Colors.red;
     }
@@ -26,7 +26,7 @@ class AccessPointNetworkTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border(
           left: BorderSide(color: signalColor, width: 2),
@@ -43,7 +43,7 @@ class AccessPointNetworkTile extends StatelessWidget {
         title: Text(
           network.ssid.isEmpty ? '[Hidden Network]' : network.ssid,
           style: GoogleFonts.rajdhani(
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -52,14 +52,14 @@ class AccessPointNetworkTile extends StatelessWidget {
           padding: const EdgeInsets.only(top: 8.0),
           child: Row(
             children: [
-              _buildChip(network.band, AppTheme.primary),
+              _buildChip(theme, network.band, theme.colorScheme.primary),
               const SizedBox(width: 8),
-              _buildChip(network.securityType, securityColor),
+              _buildChip(theme, network.securityType, securityColor),
               const SizedBox(width: 8),
               Text(
                 'Ch ${network.channel}',
                 style: GoogleFonts.inter(
-                  color: AppTheme.textSecondary,
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontSize: 12,
                 ),
               ),
@@ -81,7 +81,7 @@ class AccessPointNetworkTile extends StatelessWidget {
             Text(
               'dBm',
               style: GoogleFonts.inter(
-                color: AppTheme.textSecondary,
+                color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 10,
               ),
             ),
@@ -91,18 +91,18 @@ class AccessPointNetworkTile extends StatelessWidget {
     );
   }
 
-  Widget _buildChip(String label, Color borderColor) {
+  Widget _buildChip(ThemeData theme, String label, Color borderColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariant,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: borderColor),
       ),
       child: Text(
         label,
         style: GoogleFonts.inter(
-          color: AppTheme.textPrimary,
+          color: theme.colorScheme.onSurface,
           fontSize: 10,
         ),
       ),

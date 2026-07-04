@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_theme.dart';
 
 class PermissionWidget extends StatelessWidget {
   final VoidCallback onGrant;
@@ -9,18 +8,20 @@ class PermissionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.wifi_find, size: 80, color: AppTheme.primary),
+            Icon(Icons.wifi_find, size: 80, color: theme.colorScheme.primary),
             const SizedBox(height: 24),
             Text(
               'Location Permission Required',
               style: GoogleFonts.rajdhani(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
               ),
@@ -30,7 +31,7 @@ class PermissionWidget extends StatelessWidget {
             Text(
               'We need location permissions to scan for nearby Wi-Fi networks in Android.',
               style: GoogleFonts.inter(
-                color: AppTheme.textSecondary,
+                color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -39,8 +40,8 @@ class PermissionWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: onGrant,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: AppTheme.background,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.scaffoldBackgroundColor,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),

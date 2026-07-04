@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class SignalBarPainter extends CustomPainter {
   final int currentRssi;
+  final Color labelColor;
 
-  SignalBarPainter({required this.currentRssi});
+  SignalBarPainter({required this.currentRssi, required this.labelColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -24,7 +25,7 @@ class SignalBarPainter extends CustomPainter {
     
     final xPos = size.width * percent;
     final indicatorPaint = Paint()
-      ..color = Colors.white
+      ..color = labelColor
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
@@ -37,7 +38,7 @@ class SignalBarPainter extends CustomPainter {
     final textPainter = TextPainter(
       text: TextSpan(
         text: '$currentRssi',
-        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+        style: TextStyle(color: labelColor, fontSize: 10, fontWeight: FontWeight.bold),
       ),
       textDirection: TextDirection.ltr,
     );
@@ -51,6 +52,6 @@ class SignalBarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant SignalBarPainter oldDelegate) {
-    return oldDelegate.currentRssi != currentRssi;
+    return oldDelegate.currentRssi != currentRssi || oldDelegate.labelColor != labelColor;
   }
 }

@@ -8,11 +8,15 @@ class SignalBarsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SizedBox(
       width: 24,
       height: 24,
       child: CustomPaint(
-        painter: _SignalBarsPainter(rssi: rssi),
+        painter: _SignalBarsPainter(
+          rssi: rssi,
+          inactiveColor: theme.colorScheme.surfaceContainerHighest,
+        ),
       ),
     );
   }
@@ -20,13 +24,13 @@ class SignalBarsWidget extends StatelessWidget {
 
 class _SignalBarsPainter extends CustomPainter {
   final int rssi;
+  final Color inactiveColor;
 
-  _SignalBarsPainter({required this.rssi});
+  _SignalBarsPainter({required this.rssi, required this.inactiveColor});
 
   @override
   void paint(Canvas canvas, Size size) {
     final activeColor = SignalColors.fromRssi(rssi);
-    final inactiveColor = const Color(0xFF1E2A45);
 
     int activeBars = 1;
     if (rssi >= -50) {
@@ -60,6 +64,6 @@ class _SignalBarsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SignalBarsPainter oldDelegate) {
-    return oldDelegate.rssi != rssi;
+    return oldDelegate.rssi != rssi || oldDelegate.inactiveColor != inactiveColor;
   }
 }

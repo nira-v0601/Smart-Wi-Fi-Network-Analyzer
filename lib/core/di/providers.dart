@@ -114,6 +114,26 @@ class WifiInfoService {
   Future<String> getSecurityType(String? currentBssid, String? currentSsid) async {
     final granted = await _requestAndVerifyPermission();
     if (!granted) return 'WPA2';
+
+    try {
+      final int? secType = await _channel.invokeMethod('getSecurityType');
+      if (secType != null && secType != -1) {
+        switch (secType) {
+          case 0: return 'Open';
+          case 1: return 'WEP';
+          case 2: return 'WPA/WPA2';
+          case 3: return 'WPA2 Enterprise';
+          case 4: return 'WPA3';
+          case 5: return 'WPA3 Enterprise';
+          case 6: return 'OWE';
+          case 9: return 'WPA3 Enterprise';
+          default: return 'WPA2';
+        }
+      }
+    } catch (_) {
+      // Fallback to scan results
+    }
+
     try {
       var canGet = await WiFiScan.instance.canGetScannedResults();
       var results = canGet == CanGetScannedResults.yes 

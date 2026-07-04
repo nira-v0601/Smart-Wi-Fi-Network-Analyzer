@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../view_models/networks_view_model.dart';
 import '../widgets/permission_widget.dart';
 import '../widgets/access_point_tile.dart';
@@ -52,16 +51,17 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(networksViewModelProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             if (state.isScanning && state.networks.isNotEmpty)
-              const LinearProgressIndicator(
+              LinearProgressIndicator(
                 backgroundColor: Colors.transparent,
-                color: AppTheme.primary,
+                color: theme.colorScheme.primary,
                 minHeight: 2,
               ),
             Padding(
@@ -72,7 +72,7 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
                   Text(
                     'Nearby Networks',
                     style: GoogleFonts.rajdhani(
-                      color: AppTheme.primary,
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 22,
                     ),
@@ -83,21 +83,21 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppTheme.surfaceVariant,
+                            color: theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.border),
+                            border: Border.all(color: theme.colorScheme.outline),
                           ),
                           child: Text(
                             '${state.networks.length} found',
                             style: GoogleFonts.inter(
-                              color: AppTheme.textPrimary,
+                              color: theme.colorScheme.onSurface,
                               fontSize: 12,
                             ),
                           ),
                         ),
                       const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(Icons.refresh, color: AppTheme.primary),
+                        icon: Icon(Icons.refresh, color: theme.colorScheme.primary),
                         onPressed: state.isScanning ? null : () {
                           ref.read(networksViewModelProvider.notifier).scan();
                         },
@@ -108,7 +108,7 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
               ),
             ),
             Expanded(
-              child: _buildBody(state),
+              child: _buildBody(state, theme),
             ),
             if (state.hasPermission && state.lastScan != null)
               Padding(
@@ -116,7 +116,7 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
                 child: Text(
                   'Last scan: ${_getTimeAgo(state.lastScan)}',
                   style: GoogleFonts.inter(
-                    color: AppTheme.textSecondary,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -127,7 +127,7 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
     );
   }
 
-  Widget _buildBody(NetworksState state) {
+  Widget _buildBody(NetworksState state, ThemeData theme) {
     if (!state.hasPermission) {
       return PermissionWidget(
         onGrant: () {
@@ -145,7 +145,7 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
               width: 200,
               height: 200,
               child: CustomPaint(
-                painter: RadarPainter(_radarController.value * 2 * pi),
+                painter: RadarPainter(_radarController.value * 2 * pi, theme.colorScheme.outline, theme.colorScheme.primary),
               ),
             );
           },
@@ -157,7 +157,7 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
       return Center(
         child: Text(
           'No networks found.',
-          style: GoogleFonts.inter(color: AppTheme.textSecondary),
+          style: GoogleFonts.inter(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
     }
@@ -175,8 +175,10 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
 
 class RadarPainter extends CustomPainter {
   final double sweepAngle;
+  final Color borderColor;
+  final Color primaryColor;
 
-  RadarPainter(this.sweepAngle);
+  RadarPainter(this.sweepAngle, this.borderColor, this.primaryColor);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -184,7 +186,7 @@ class RadarPainter extends CustomPainter {
     final radius = size.width / 2;
 
     final circlePaint = Paint()
-      ..color = AppTheme.border
+      ..color = borderColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -195,8 +197,8 @@ class RadarPainter extends CustomPainter {
     final sweepPaint = Paint()
       ..shader = SweepGradient(
         colors: [
-          AppTheme.primary.withValues(alpha: 0.0),
-          AppTheme.primary.withValues(alpha: 0.5),
+          primaryColor.withValues(alpha: 0.0),
+          primaryColor.withValues(alpha: 0.5),
         ],
         stops: const [0.5, 1.0],
         transform: GradientRotation(sweepAngle),

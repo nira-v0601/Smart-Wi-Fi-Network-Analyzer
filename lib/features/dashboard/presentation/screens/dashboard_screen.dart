@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/signal_colors.dart';
 import '../view_models/dashboard_view_model.dart';
 import '../widgets/detail_card.dart';
@@ -35,7 +34,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     // TIMER 1: Refresh RSSI + SSID every 1 seconds (live feel)
     _signalTimer = Timer.periodic(
-      const Duration(seconds: 1),
+      const Duration(milliseconds: 500),
       (_) => ref.read(dashboardViewModelProvider.notifier).refreshSignal(),
     );
 
@@ -71,6 +70,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(dashboardViewModelProvider);
+    final theme = Theme.of(context);
 
     ref.listen<DashboardState>(dashboardViewModelProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
@@ -81,29 +81,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildTopBar(),
+              _buildTopBar(theme),
               const SizedBox(height: 24),
               if (state.isLoading)
-                const Expanded(
-                  child: Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+                Expanded(
+                  child: Center(child: CircularProgressIndicator(color: theme.colorScheme.primary)),
                 )
               else if (state.networkInfo != null) ...[
-                _buildHeroCard(state.networkInfo),
+                _buildHeroCard(theme, state.networkInfo),
                 const SizedBox(height: 24),
-                Expanded(child: _buildDetailsGrid(state.networkInfo)),
+                Expanded(child: _buildDetailsGrid(theme, state.networkInfo)),
                 const SizedBox(height: 16),
-                _buildIspCard(state.networkInfo),
+                _buildIspCard(theme, state.networkInfo),
               ] else
-                const Expanded(
+                Expanded(
                   child: Center(
-                    child: Text('No Network Info Available', style: TextStyle(color: AppTheme.textSecondary)),
+                    child: Text('No Network Info Available', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
                   ),
                 ),
             ],
@@ -113,7 +113,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar(ThemeData theme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -123,7 +123,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Text(
               'Wi-Fi Analyzer',
               style: GoogleFonts.rajdhani(
-                color: AppTheme.primary,
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 22,
               ),
@@ -131,14 +131,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Text(
               _currentTime,
               style: GoogleFonts.inter(
-                color: AppTheme.textSecondary,
+                color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 14,
               ),
             ),
           ],
         ),
         IconButton(
-          icon: const Icon(Icons.refresh, color: AppTheme.primary),
+          icon: Icon(Icons.refresh, color: theme.colorScheme.primary),
           onPressed: () {
             ref.read(dashboardViewModelProvider.notifier).load();
             // Manual tap = full reload including Public IP + ISP
@@ -148,15 +148,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildHeroCard(dynamic networkInfo) {
+  Widget _buildHeroCard(ThemeData theme, dynamic networkInfo) {
     final signalColor = SignalColors.fromRssi(networkInfo.rssi);
     
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.primary.withOpacity(0.3), width: 1),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3), width: 1),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -166,12 +166,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.wifi, color: AppTheme.primary),
+                  Icon(Icons.wifi, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
                   Text(
                     networkInfo.ssid,
                     style: GoogleFonts.rajdhani(
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
                     ),
@@ -181,13 +181,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.2),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   networkInfo.securityType,
                   style: GoogleFonts.inter(
-                    color: AppTheme.primary,
+                    color: theme.colorScheme.primary,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -213,7 +213,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               Text(
                 'dBm',
                 style: GoogleFonts.inter(
-                  color: AppTheme.textSecondary,
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontSize: 16,
                 ),
               ),
@@ -232,9 +232,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildChip(networkInfo.band),
-              _buildChip(networkInfo.wifiVersion),
-              _buildChip(networkInfo.securityType),
+              _buildChip(theme, networkInfo.band),
+              _buildChip(theme, networkInfo.wifiVersion),
+              _buildChip(theme, networkInfo.securityType),
             ],
           ),
         ],
@@ -242,18 +242,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildChip(String label) {
+  Widget _buildChip(ThemeData theme, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariant,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.border),
+        border: Border.all(color: theme.colorScheme.outline),
       ),
       child: Text(
         label,
         style: GoogleFonts.inter(
-          color: AppTheme.textPrimary,
+          color: theme.colorScheme.onSurface,
           fontSize: 10,
         ),
       ),
@@ -270,7 +270,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return freqStr;
   }
 
-  Widget _buildDetailsGrid(dynamic networkInfo) {
+  Widget _buildDetailsGrid(ThemeData theme, dynamic networkInfo) {
     String ispShort = networkInfo.ispName;
     if (ispShort.length > 15) {
       ispShort = '${ispShort.substring(0, 15)}...';
@@ -291,16 +291,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildIspCard(dynamic networkInfo) {
+  Widget _buildIspCard(ThemeData theme, dynamic networkInfo) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          const Icon(Icons.business, color: AppTheme.primary, size: 32),
+          Icon(Icons.business, color: theme.colorScheme.primary, size: 32),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -309,7 +309,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Text(
                   networkInfo.ispName,
                   style: GoogleFonts.rajdhani(
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -317,7 +317,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Text(
                   networkInfo.ispOrg,
                   style: GoogleFonts.inter(
-                    color: AppTheme.textSecondary,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                   maxLines: 1,
@@ -329,13 +329,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppTheme.secondary.withOpacity(0.2),
+              color: theme.colorScheme.secondary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
               'Connected',
               style: GoogleFonts.inter(
-                color: AppTheme.secondary,
+                color: theme.colorScheme.secondary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

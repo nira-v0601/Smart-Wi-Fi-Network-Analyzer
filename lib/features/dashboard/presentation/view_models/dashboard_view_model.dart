@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/di/providers.dart';
@@ -18,8 +20,20 @@ class DashboardState with _$DashboardState {
 
 @riverpod
 class DashboardViewModel extends _$DashboardViewModel {
+  StreamSubscription? _connectivitySubscription;
+
   @override
   DashboardState build() {
+    ref.onDispose(() {
+      _connectivitySubscription?.cancel();
+    });
+
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
+      if (!state.isLoading) {
+        load();
+      }
+    });
+
     return DashboardState(isLoading: true);
   }
 
@@ -49,11 +63,11 @@ class DashboardViewModel extends _$DashboardViewModel {
         wifiService.getIPv6(),           // [5]
       ]);
 
-      final ssid      = (results[0] as String?) ?? 'Not Connected';
-      final bssid     = (results[1] as String?) ?? '—';
-      final localIp   = (results[2] as String?) ?? '—';
+      final ssid      = results[0] ?? 'Not Connected';
+      final bssid     = results[1] ?? '—';
+      final localIp   = results[2] ?? '—';
       final rawGateway = results[3] as String?;
-      final localIpVal = (results[2] as String?) ?? '—';
+      final localIpVal = results[2] ?? '—';
       // Derive gateway from local IP: replace last octet with .1
       // e.g. 192.168.1.11 → 192.168.1.1
       String gateway = '—';
@@ -65,14 +79,13 @@ class DashboardViewModel extends _$DashboardViewModel {
           gateway = '${parts[0]}.${parts[1]}.${parts[2]}.1';
         }
       }
-      final subnet    = (results[4] as String?) ?? '—';
-      final ipv6      = (results[5] as String?);
+      final subnet    = results[4] ?? '—';
+      final ipv6      = results[5];
 
       // STEP 4: Fetch real RSSI and frequency separately
       final rssi       = await wifiService.getRSSI() ?? -99;
       final freqMHz    = await wifiService.getFrequency();
-      final linkSpeed  = await wifiService.getLinkSpeed();
-
+      
       // STEP 5: Derive band and WiFi version from frequency
       String band;
       String wifiVersion;

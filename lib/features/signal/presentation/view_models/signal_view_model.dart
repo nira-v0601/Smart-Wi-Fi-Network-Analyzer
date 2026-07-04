@@ -40,7 +40,7 @@ class SignalViewModel extends _$SignalViewModel {
     );
 
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (_) {
       _fetchSignalData();
     });
     

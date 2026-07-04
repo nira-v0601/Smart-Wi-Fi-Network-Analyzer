@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../view_models/speedtest_view_model.dart';
 import '../widgets/metric_card.dart';
 import '../widgets/speedometer_painter.dart';
@@ -33,18 +32,19 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final state = ref.watch(speedtestViewModelProvider);
     final viewModel = ref.read(speedtestViewModelProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Speed Test',
           style: GoogleFonts.rajdhani(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -57,7 +57,7 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
             children: [
               Expanded(
                 child: Center(
-                  child: _buildSpeedometer(state, viewModel),
+                  child: _buildSpeedometer(theme, state, viewModel),
                 ),
               ),
               const SizedBox(height: 24),
@@ -75,17 +75,17 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
     );
   }
 
-  Widget _buildSpeedometer(SpeedtestState state, SpeedtestViewModel viewModel) {
+  Widget _buildSpeedometer(ThemeData theme, SpeedtestState state, SpeedtestViewModel viewModel) {
     double percent = 0.0;
-    Color activeColor = const Color(0xFF00E5FF); // cyan
+    Color activeColor = theme.colorScheme.primary;
     bool useGradient = false;
 
     if (state.phase == SpeedTestPhase.testingDownload) {
       percent = state.downloadProgress;
-      activeColor = const Color(0xFF00E5FF);
+      activeColor = theme.colorScheme.primary;
     } else if (state.phase == SpeedTestPhase.testingUpload) {
       percent = state.uploadProgress;
-      activeColor = const Color(0xFF00FF88); // green
+      activeColor = theme.colorScheme.secondary;
     } else if (state.phase == SpeedTestPhase.complete) {
       percent = 1.0;
       useGradient = true;
@@ -106,22 +106,23 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
           painter: SpeedometerPainter(
             percent: percent,
             activeColor: activeColor,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
             useGradient: useGradient,
           ),
           child: Center(
-            child: _buildSpeedometerCenterContent(state),
+            child: _buildSpeedometerCenterContent(theme, state),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSpeedometerCenterContent(SpeedtestState state) {
+  Widget _buildSpeedometerCenterContent(ThemeData theme, SpeedtestState state) {
     if (state.phase == SpeedTestPhase.idle || state.phase == SpeedTestPhase.error) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.speed, size: 48, color: const Color(0xFF00E5FF).withAlpha(150)),
+          Icon(Icons.speed, size: 48, color: theme.colorScheme.primary.withAlpha(150)),
           const SizedBox(height: 16),
           Text(
             state.phase == SpeedTestPhase.error ? 'TEST FAILED\nTAP TO RETRY' : 'TAP TO START',
@@ -129,7 +130,7 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
             style: GoogleFonts.rajdhani(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF00E5FF),
+              color: theme.colorScheme.primary,
               letterSpacing: 1.5,
             ),
           ),
@@ -143,7 +144,7 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.wifi_tethering, size: 48, color: Color(0xFFFFD600)),
+            Icon(Icons.wifi_tethering, size: 48, color: theme.colorScheme.tertiary),
             const SizedBox(height: 16),
             Text(
               'PING\nTesting...',
@@ -151,7 +152,7 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
               style: GoogleFonts.rajdhani(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFFFFD600),
+                color: theme.colorScheme.tertiary,
                 letterSpacing: 1.5,
               ),
             ),
@@ -163,7 +164,7 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
     final isUpload = state.phase == SpeedTestPhase.testingUpload;
     final isComplete = state.phase == SpeedTestPhase.complete;
     final speedValue = isUpload ? state.uploadSpeed : state.downloadSpeed;
-    final valueColor = isUpload ? const Color(0xFF00FF88) : const Color(0xFF00E5FF);
+    final valueColor = isUpload ? theme.colorScheme.secondary : theme.colorScheme.primary;
     final labelText = isUpload ? '↑ Upload' : '↓ Download';
 
     return Column(
@@ -185,7 +186,7 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
           style: GoogleFonts.rajdhani(
             fontSize: 56,
             fontWeight: FontWeight.bold,
-            color: isComplete ? const Color(0xFF00E5FF) : valueColor,
+            color: isComplete ? theme.colorScheme.primary : valueColor,
             height: 1.0,
           ),
         ),
@@ -193,7 +194,7 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
           'Mbps',
           style: TextStyle(
             fontSize: 14,
-            color: Colors.white.withAlpha(150),
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         if (isComplete) ...[
@@ -203,7 +204,7 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
             style: GoogleFonts.rajdhani(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF00FF88),
+              color: theme.colorScheme.secondary,
               letterSpacing: 1.2,
             ),
           ),
@@ -213,36 +214,38 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
   }
 
   Widget _buildStatsRow(SpeedtestState state) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         MetricCard(
           label: 'PING',
           value: state.ping > 0 ? '${state.ping} ms' : '—',
-          color: const Color(0xFFFFD600),
+          color: theme.colorScheme.tertiary,
         ),
         MetricCard(
           label: 'JITTER',
           value: state.ping > 0 ? '${state.jitter} ms' : '—',
-          color: const Color(0xFFFFD600),
+          color: theme.colorScheme.tertiary,
         ),
         MetricCard(
           label: 'DOWNLOAD',
           value: state.downloadSpeed > 0 ? state.downloadSpeed.toStringAsFixed(1) : '—',
-          color: const Color(0xFF00E5FF),
+          color: theme.colorScheme.primary,
         ),
         MetricCard(
           label: 'UPLOAD',
           value: state.uploadSpeed > 0 ? state.uploadSpeed.toStringAsFixed(1) : '—',
-          color: const Color(0xFF00FF88),
+          color: theme.colorScheme.secondary,
         ),
       ],
     );
   }
 
   Widget _buildProgressIndicators(SpeedtestState state) {
+    final theme = Theme.of(context);
     final isDownload = state.phase == SpeedTestPhase.testingDownload;
     final progress = isDownload ? state.downloadProgress : state.uploadProgress;
-    final color = isDownload ? const Color(0xFF00E5FF) : const Color(0xFF00FF88);
+    final color = isDownload ? theme.colorScheme.primary : theme.colorScheme.secondary;
     final label = isDownload ? 'Download' : 'Upload';
 
     return Column(
@@ -251,13 +254,13 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-            Text('${(progress * 100).toInt()}%', style: const TextStyle(color: Colors.white70)),
+            Text('${(progress * 100).toInt()}%', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
           ],
         ),
         const SizedBox(height: 8),
         LinearProgressIndicator(
           value: progress,
-          backgroundColor: const Color(0xFF1E2A45),
+          backgroundColor: theme.colorScheme.surfaceContainerHighest,
           valueColor: AlwaysStoppedAnimation<Color>(color),
           minHeight: 6,
           borderRadius: BorderRadius.circular(3),
@@ -268,6 +271,7 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
 
   Widget _buildActionBtn(SpeedtestState state, SpeedtestViewModel viewModel) {
     final isTesting = state.phase != SpeedTestPhase.idle && state.phase != SpeedTestPhase.complete && state.phase != SpeedTestPhase.error;
+    final theme = Theme.of(context);
     
     return SizedBox(
       width: double.infinity,
@@ -275,10 +279,10 @@ class _SpeedtestScreenState extends ConsumerState<SpeedtestScreen> with SingleTi
       child: ElevatedButton(
         onPressed: isTesting ? null : () => viewModel.startTest(),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF00E5FF),
-          foregroundColor: const Color(0xFF080C18),
-          disabledBackgroundColor: const Color(0xFF1E2A45),
-          disabledForegroundColor: Colors.white54,
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.scaffoldBackgroundColor,
+          disabledBackgroundColor: theme.colorScheme.surfaceContainerHighest,
+          disabledForegroundColor: theme.colorScheme.onSurfaceVariant,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

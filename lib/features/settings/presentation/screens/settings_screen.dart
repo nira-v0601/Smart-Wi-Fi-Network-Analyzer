@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../../../dashboard/presentation/view_models/dashboard_view_model.dart';
 import '../../../speedtest/data/models/speed_result_model.dart';
 
@@ -13,15 +13,16 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDark = ref.watch(themeNotifierProvider) == ThemeMode.dark;
+
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Settings',
-          style: GoogleFonts.rajdhani(
-            fontSize: 24,
+          style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -30,44 +31,46 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
         children: [
-          _buildSectionHeader('APPEARANCE'),
+          _buildSectionHeader(theme, 'APPEARANCE'),
           ListTile(
-            leading: const Icon(Icons.palette, color: Colors.white70),
-            title: const Text('Dark Mode', style: TextStyle(color: Colors.white)),
+            leading: Icon(Icons.palette, color: theme.colorScheme.onSurfaceVariant),
+            title: Text('Dark Mode', style: TextStyle(color: theme.colorScheme.onSurface)),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('App theme', style: TextStyle(color: Colors.white54)),
+                Text('App theme', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
                   decoration: BoxDecoration(
-                    color: AppTheme.surface,
+                    color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    'Always On — Only dark mode supported',
-                    style: TextStyle(fontSize: 10, color: Colors.white54),
+                  child: Text(
+                    isDark ? 'Dark mode is ON' : 'Light mode is ON',
+                    style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
             ),
             trailing: Switch(
-              value: true,
-              onChanged: null, // disabled
-              activeTrackColor: const Color(0xFF00E5FF).withAlpha(100),
-              activeColor: const Color(0xFF00E5FF).withAlpha(150),
+              value: isDark,
+              onChanged: (val) {
+                ref.read(themeNotifierProvider.notifier).toggleTheme(val);
+              },
+              activeTrackColor: theme.colorScheme.primary.withAlpha(100),
+              activeThumbColor: theme.colorScheme.primary.withAlpha(150),
             ),
             contentPadding: EdgeInsets.zero,
           ),
           const SizedBox(height: 24),
 
-          _buildSectionHeader('SPEED TEST'),
+          _buildSectionHeader(theme, 'SPEED TEST'),
           ListTile(
-            leading: const Icon(Icons.history, color: Colors.white70),
-            title: const Text('Test History', style: TextStyle(color: Colors.white)),
-            subtitle: const Text('View past speed test results', style: TextStyle(color: Colors.white54)),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white54),
+            leading: Icon(Icons.history, color: theme.colorScheme.onSurfaceVariant),
+            title: Text('Test History', style: TextStyle(color: theme.colorScheme.onSurface)),
+            subtitle: Text('View past speed test results', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
             contentPadding: EdgeInsets.zero,
             onTap: () {
               Navigator.push(
@@ -78,11 +81,11 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          _buildSectionHeader('NETWORK'),
+          _buildSectionHeader(theme, 'NETWORK'),
           ListTile(
-            leading: const Icon(Icons.wifi_find, color: Colors.white70),
-            title: const Text('Advanced Network Details', style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white54),
+            leading: Icon(Icons.wifi_find, color: theme.colorScheme.onSurfaceVariant),
+            title: Text('Advanced Network Details', style: TextStyle(color: theme.colorScheme.onSurface)),
+            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
             contentPadding: EdgeInsets.zero,
             onTap: () {
               Navigator.push(
@@ -93,26 +96,26 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          _buildSectionHeader('ABOUT'),
+          _buildSectionHeader(theme, 'ABOUT'),
           ListTile(
-            leading: const Icon(Icons.info_outline, color: Colors.white70),
-            title: const Text('App Version', style: TextStyle(color: Colors.white)),
+            leading: Icon(Icons.info_outline, color: theme.colorScheme.onSurfaceVariant),
+            title: Text('App Version', style: TextStyle(color: theme.colorScheme.onSurface)),
             trailing: Text(
               'v1.0.0',
-              style: GoogleFonts.rajdhani(color: Colors.white54, fontSize: 16),
+              style: GoogleFonts.rajdhani(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
             ),
             contentPadding: EdgeInsets.zero,
           ),
-          const ListTile(
-            leading: Icon(Icons.code, color: Colors.white70),
-            title: Text('Built With', style: TextStyle(color: Colors.white)),
-            trailing: Text('Flutter + Gemini', style: TextStyle(color: Colors.white54, fontSize: 12)),
+          ListTile(
+            leading: Icon(Icons.code, color: theme.colorScheme.onSurfaceVariant),
+            title: Text('Built With', style: TextStyle(color: theme.colorScheme.onSurface)),
+            trailing: Text('Flutter + Gemini', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
             contentPadding: EdgeInsets.zero,
           ),
-          const ListTile(
-            leading: Icon(Icons.developer_mode, color: Colors.white70),
-            title: Text('Developer', style: TextStyle(color: Colors.white)),
-            subtitle: Text('GTU BE IT Student', style: TextStyle(color: Colors.white54)),
+          ListTile(
+            leading: Icon(Icons.developer_mode, color: theme.colorScheme.onSurfaceVariant),
+            title: Text('Developer', style: TextStyle(color: theme.colorScheme.onSurface)),
+            subtitle: Text('GTU BE IT Student', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
             contentPadding: EdgeInsets.zero,
           ),
         ],
@@ -120,21 +123,21 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(ThemeData theme, String title) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
           style: GoogleFonts.rajdhani(
-            color: const Color(0xFF00E5FF),
+            color: theme.colorScheme.primary,
             fontSize: 13,
             letterSpacing: 1.5,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 4),
-        const Divider(color: Colors.white12, thickness: 1),
+        Divider(color: theme.colorScheme.outline, thickness: 1),
         const SizedBox(height: 8),
       ],
     );
@@ -176,29 +179,30 @@ class _SpeedTestHistoryScreenState extends State<SpeedTestHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Speed Test History',
-          style: GoogleFonts.rajdhani(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF00E5FF)))
+          ? Center(child: CircularProgressIndicator(color: theme.colorScheme.primary))
           : _history.isEmpty
               ? Center(
                   child: Text(
                     'No test history yet',
-                    style: GoogleFonts.rajdhani(fontSize: 18, color: Colors.white54),
+                    style: GoogleFonts.rajdhani(fontSize: 18, color: theme.colorScheme.onSurfaceVariant),
                   ),
                 )
               : ListView.separated(
                   padding: const EdgeInsets.all(16.0),
                   itemCount: _history.length,
-                  separatorBuilder: (context, index) => const Divider(color: Colors.white12, height: 24),
+                  separatorBuilder: (context, index) => Divider(color: theme.colorScheme.outline, height: 24),
                   itemBuilder: (context, index) {
                     final item = _history[index];
                     final dateStr = DateFormat('dd MMM yyyy, HH:mm').format(item.testedAt);
@@ -207,15 +211,15 @@ class _SpeedTestHistoryScreenState extends State<SpeedTestHistoryScreen> {
                       children: [
                         Text(
                           dateStr,
-                          style: const TextStyle(color: Colors.white54, fontSize: 12),
+                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                         ),
                         const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildStat('↓', item.downloadMbps, const Color(0xFF00E5FF)),
-                            _buildStat('↑', item.uploadMbps, const Color(0xFF00FF88)),
-                            _buildStat('Ping', item.pingMs.toDouble(), const Color(0xFFFFD600), isPing: true),
+                            _buildStat(context, '↓', item.downloadMbps, const Color(0xFF00E5FF)),
+                            _buildStat(context, '↑', item.uploadMbps, const Color(0xFF00FF88)),
+                            _buildStat(context, 'Ping', item.pingMs.toDouble(), const Color(0xFFFFD600), isPing: true),
                           ],
                         ),
                       ],
@@ -225,7 +229,8 @@ class _SpeedTestHistoryScreenState extends State<SpeedTestHistoryScreen> {
     );
   }
 
-  Widget _buildStat(String icon, double value, Color color, {bool isPing = false}) {
+  Widget _buildStat(BuildContext context, String icon, double value, Color color, {bool isPing = false}) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Text(
@@ -236,7 +241,7 @@ class _SpeedTestHistoryScreenState extends State<SpeedTestHistoryScreen> {
         Text(
           isPing ? value.toInt().toString() : value.toStringAsFixed(1),
           style: GoogleFonts.rajdhani(
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -244,7 +249,7 @@ class _SpeedTestHistoryScreenState extends State<SpeedTestHistoryScreen> {
         const SizedBox(width: 4),
         Text(
           isPing ? 'ms' : 'Mbps',
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
         ),
       ],
     );
@@ -256,75 +261,77 @@ class AdvancedNetworkScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final dashboardState = ref.watch(dashboardViewModelProvider);
     final info = dashboardState.networkInfo;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           'Advanced Details',
-          style: GoogleFonts.rajdhani(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: info == null
-          ? const Center(
+          ? Center(
               child: Text(
                 'No network information available',
-                style: TextStyle(color: Colors.white54),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
               ),
             )
           : ListView(
               padding: const EdgeInsets.all(16.0),
               children: [
-                _buildSectionHeader('CONNECTION'),
-                _buildRow('SSID', info.ssid),
-                _buildRow('BSSID', info.bssid),
-                _buildRow('Frequency', info.frequency),
-                _buildRow('Band', info.band),
-                _buildRow('Security', info.securityType),
-                _buildRow('Wi-Fi Version', info.wifiVersion),
+                _buildSectionHeader(theme, 'CONNECTION'),
+                _buildRow(context, 'SSID', info.ssid),
+                _buildRow(context, 'BSSID', info.bssid),
+                _buildRow(context, 'Frequency', info.frequency),
+                _buildRow(context, 'Band', info.band),
+                _buildRow(context, 'Security', info.securityType),
+                _buildRow(context, 'Wi-Fi Version', info.wifiVersion),
                 const SizedBox(height: 24),
                 
-                _buildSectionHeader('IP & NETWORK'),
-                _buildRow('Local IP', info.localIp),
-                _buildRow('Public IP', info.publicIp),
-                _buildRow('Subnet Mask', info.subnet ?? 'Unknown'),
-                _buildRow('Gateway', info.gateway ?? 'Unknown'),
-                _buildRow('IP Version', info.ipVersion ?? 'Unknown'),
+                _buildSectionHeader(theme, 'IP & NETWORK'),
+                _buildRow(context, 'Local IP', info.localIp),
+                _buildRow(context, 'Public IP', info.publicIp),
+                _buildRow(context, 'Subnet Mask', info.subnet ?? 'Unknown'),
+                _buildRow(context, 'Gateway', info.gateway ?? 'Unknown'),
+                _buildRow(context, 'IP Version', info.ipVersion ?? 'Unknown'),
                 const SizedBox(height: 24),
 
-                _buildSectionHeader('ISP INFO'),
-                _buildRow('ISP Name', info.ispName),
-                _buildRow('ISP Organization', info.ispOrg),
+                _buildSectionHeader(theme, 'ISP INFO'),
+                _buildRow(context, 'ISP Name', info.ispName),
+                _buildRow(context, 'ISP Organization', info.ispOrg),
               ],
             ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(ThemeData theme, String title) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
           style: GoogleFonts.rajdhani(
-            color: const Color(0xFF00E5FF),
+            color: theme.colorScheme.primary,
             fontSize: 13,
             letterSpacing: 1.5,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 4),
-        const Divider(color: Colors.white12, thickness: 1),
+        Divider(color: theme.colorScheme.outline, thickness: 1),
         const SizedBox(height: 8),
       ],
     );
   }
 
-  Widget _buildRow(String label, String value) {
+  Widget _buildRow(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
@@ -334,7 +341,7 @@ class AdvancedNetworkScreen extends ConsumerWidget {
             flex: 2,
             child: Text(
               label,
-              style: const TextStyle(color: Colors.white54, fontSize: 14),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14),
             ),
           ),
           Expanded(
@@ -342,7 +349,7 @@ class AdvancedNetworkScreen extends ConsumerWidget {
             child: Text(
               value,
               style: GoogleFonts.rajdhani(
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),

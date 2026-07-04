@@ -15,6 +15,8 @@ class MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Expanded(
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -25,9 +27,9 @@ class MetricCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 10,
-                  color: Colors.white54,
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,

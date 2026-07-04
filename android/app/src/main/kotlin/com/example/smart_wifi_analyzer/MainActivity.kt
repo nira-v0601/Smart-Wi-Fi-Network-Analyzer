@@ -20,6 +20,18 @@ class MainActivity : FlutterActivity() {
                 } else {
                     result.success(null)
                 }
+            } else if (call.method == "getSecurityType") {
+                val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                val info = wifiManager.connectionInfo
+                if (info != null && info.networkId != -1) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                        result.success(info.currentSecurityType)
+                    } else {
+                        result.success(-1)
+                    }
+                } else {
+                    result.success(-1)
+                }
             } else {
                 result.notImplemented()
             }
