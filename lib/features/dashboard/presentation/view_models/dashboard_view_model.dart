@@ -134,12 +134,15 @@ class DashboardViewModel extends _$DashboardViewModel {
   Future<void> refreshSignal() async {
     try {
       final wifiService = ref.read(wifiInfoServiceProvider);
-      final rssi = await wifiService.getRSSI() 
-                   ?? state.networkInfo?.rssi 
-                   ?? -99;
-      final ssid = await wifiService.getSSID() 
-                   ?? state.networkInfo?.ssid 
-                   ?? 'Not Connected';
+      final currentSsid = await wifiService.getSSID() ?? 'Not Connected';
+
+      // If the SSID changed from what we had, trigger full reload
+      if (state.networkInfo != null && currentSsid != state.networkInfo!.ssid) {
+        load();
+        return;
+      }
+
+      final rssi = await wifiService.getRSSI() ?? state.networkInfo?.rssi ?? -99;
 
       // Always update state — no equality check
       // UI will only visually change if value is different (Flutter handles this)
@@ -147,7 +150,7 @@ class DashboardViewModel extends _$DashboardViewModel {
         state = state.copyWith(
           networkInfo: state.networkInfo!.copyWith(
             rssi: rssi,
-            ssid: ssid,
+            ssid: currentSsid,
           ),
         );
       }

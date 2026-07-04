@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:flutter/services.dart';
 
 import '../services/ip_info_service.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -10,6 +11,7 @@ part 'providers.g.dart';
 
 class WifiInfoService {
   final NetworkInfo _networkInfo = NetworkInfo();
+  static const MethodChannel _channel = MethodChannel('com.example.smart_wifi_analyzer/wifi');
 
   Future<bool> _requestAndVerifyPermission() async {
     // Request location permission at runtime
@@ -85,6 +87,16 @@ class WifiInfoService {
   Future<int?> getRSSI() async {
     final granted = await _requestAndVerifyPermission();
     if (!granted) return null;
+    
+    // First attempt: Fast native OS API (Android only)
+    try {
+      final int? rssi = await _channel.invokeMethod('getRssi');
+      if (rssi != null && rssi < 0) return rssi;
+    } catch (_) {
+      // Fallback if not implemented (e.g. iOS) or error
+    }
+
+    // Fallback: WiFi scan results
     try {
       final bssid = await getBSSID();
       if (bssid == null || bssid.isEmpty) return null;
@@ -103,11 +115,24 @@ class WifiInfoService {
     final granted = await _requestAndVerifyPermission();
     if (!granted) return 'WPA2';
     try {
-      final canGet = await WiFiScan.instance.canGetScannedResults();
-      if (canGet != CanGetScannedResults.yes) return 'WPA2';
+      var canGet = await WiFiScan.instance.canGetScannedResults();
+      var results = canGet == CanGetScannedResults.yes 
+          ? await WiFiScan.instance.getScannedResults() 
+          : <WiFiAccessPoint>[];
 
-      // Get latest scan results from wifi_scan
-      final results = await WiFiScan.instance.getScannedResults();
+      // If results are empty, try triggering a scan
+      if (results.isEmpty) {
+        final canStart = await WiFiScan.instance.canStartScan();
+        if (canStart == CanStartScan.yes) {
+          await WiFiScan.instance.startScan();
+          await Future.delayed(const Duration(seconds: 2));
+          canGet = await WiFiScan.instance.canGetScannedResults();
+          if (canGet == CanGetScannedResults.yes) {
+            results = await WiFiScan.instance.getScannedResults();
+          }
+        }
+      }
+      
       if (results.isEmpty) return 'WPA2';
 
       // Try to match by BSSID first (most accurate)
@@ -131,12 +156,13 @@ class WifiInfoService {
       }
       matched ??= results.first;
 
-      final caps = matched.capabilities;
-      if (caps.contains('WPA3')) return 'WPA3';
-      if (caps.contains('WPA2')) return 'WPA2';
+      final caps = matched.capabilities.toUpperCase();
+      if (caps.contains('WPA3') || caps.contains('SAE')) return 'WPA3';
+      if (caps.contains('WPA2') || caps.contains('RSN')) return 'WPA2';
       if (caps.contains('WPA')) return 'WPA';
       if (caps.contains('WEP')) return 'WEP';
       if (caps.isEmpty || caps == '[ESS]') return 'Open';
+      
       return 'WPA2'; // safe default
     } catch (_) {
       return 'WPA2';

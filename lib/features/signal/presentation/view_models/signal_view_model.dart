@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -22,7 +21,6 @@ class SignalState with _$SignalState {
 @riverpod
 class SignalViewModel extends _$SignalViewModel {
   Timer? _timer;
-  final _random = math.Random();
 
   @override
   SignalState build() {
@@ -49,11 +47,15 @@ class SignalViewModel extends _$SignalViewModel {
     _fetchSignalData();
   }
 
-  void _fetchSignalData() {
+  Future<void> _fetchSignalData() async {
     if (!state.isMonitoring) return;
     
-    // Fallback simulation: random value between -40 and -90
-    final rssi = -40 - _random.nextInt(51); 
+    final wifiService = ref.read(wifiInfoServiceProvider);
+    final fetchedRssi = await wifiService.getRSSI();
+
+    if (!state.isMonitoring) return;
+
+    final rssi = fetchedRssi ?? (state.currentRssi == 0 ? -100 : state.currentRssi);
 
     final newSpot = FlSpot(state.dataPointIndex.toDouble(), rssi.toDouble());
     
