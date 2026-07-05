@@ -29,10 +29,12 @@ class AccessPointModel with _$AccessPointModel {
   }
 
   String get securityType {
-    if (capabilities.contains('WPA3')) return 'WPA3';
-    if (capabilities.contains('WPA2')) return 'WPA2';
-    if (capabilities.contains('WPA')) return 'WPA';
-    if (capabilities.contains('WEP')) return 'WEP';
+    final caps = capabilities.toUpperCase();
+    if (caps.contains('WPA3') || caps.contains('SAE')) return 'WPA3';
+    if (caps.contains('WPA2') || caps.contains('RSN')) return 'WPA2';
+    if (caps.contains('WPA')) return 'WPA';
+    if (caps.contains('WEP')) return 'WEP';
+    if (caps.contains('OWE')) return 'OWE';
     return 'Open';
   }
 
