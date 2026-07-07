@@ -161,133 +161,229 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildHeroCard(ThemeData theme, dynamic networkInfo) {
     final signalColor = SignalColors.fromRssi(networkInfo.rssi);
     
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withAlpha(20),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: theme.colorScheme.primary.withAlpha(50), width: 1.5),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                theme.colorScheme.primary.withAlpha(40),
-                theme.colorScheme.primary.withAlpha(10),
-              ],
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: signalColor.withOpacity(0.15),
+            blurRadius: 30,
+            spreadRadius: 5,
+            offset: const Offset(0, 10),
           ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.wifi, color: theme.colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    networkInfo.ssid,
-                    style: GoogleFonts.rajdhani(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  networkInfo.securityType,
-                  style: GoogleFonts.inter(
-                    color: theme.colorScheme.primary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                '${networkInfo.rssi}',
-                style: GoogleFonts.rajdhani(
-                  color: signalColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 48,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'dBm',
-                style: GoogleFonts.inter(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            networkInfo.signalQuality,
-            style: GoogleFonts.inter(
-              color: signalColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildChip(theme, networkInfo.band),
-              _buildChip(theme, networkInfo.wifiVersion),
-              _buildChip(theme, networkInfo.securityType),
-            ],
+          BoxShadow(
+            color: theme.colorScheme.primary.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: -5,
+            offset: const Offset(0, -5),
           ),
         ],
       ),
-    ),
-      ),
-    );
-  }
-
-  Widget _buildChip(ThemeData theme, String label) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.onSurface.withAlpha(15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: theme.colorScheme.onSurface.withAlpha(30)),
-          ),
-          child: Text(
-            label,
-            style: GoogleFonts.inter(
-              color: theme.colorScheme.onSurface,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: theme.colorScheme.onSurface.withOpacity(0.15), // glass highlight
+                width: 1.5,
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                stops: const [0.0, 0.5, 1.0],
+                colors: [
+                  theme.colorScheme.primary.withOpacity(0.25),
+                  theme.colorScheme.surface.withOpacity(0.5),
+                  signalColor.withOpacity(0.15),
+                ],
+              ),
+            ),
+            child: Stack(
+              children: [
+                // Background big icon
+                Positioned(
+                  right: -30,
+                  bottom: -20,
+                  child: Icon(
+                    Icons.wifi,
+                    size: 180,
+                    color: signalColor.withOpacity(0.06),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(28.0),
+                  child: Column(
+                    children: [
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.wifi_tethering, color: theme.colorScheme.primary, size: 20),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    networkInfo.ssid,
+                                    style: GoogleFonts.rajdhani(
+                                      color: theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.1)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.shield, size: 12, color: theme.colorScheme.primary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  networkInfo.securityType,
+                                  style: GoogleFonts.inter(
+                                    color: theme.colorScheme.primary,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      
+                      // Signal Strength
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                '${networkInfo.rssi}',
+                                style: GoogleFonts.rajdhani(
+                                  color: theme.colorScheme.onSurface,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 64,
+                                  height: 1.0,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'dBm',
+                                style: GoogleFonts.inter(
+                                  color: theme.colorScheme.primary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: signalColor.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: signalColor.withOpacity(0.3)),
+                            ),
+                            child: Text(
+                              networkInfo.signalQuality.toUpperCase(),
+                              style: GoogleFonts.inter(
+                                color: signalColor,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Bottom Specs Bar
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.05)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildInfoColumn(theme, Icons.speed, 'Band', networkInfo.band),
+                            Container(width: 1, height: 30, color: theme.colorScheme.onSurface.withOpacity(0.1)),
+                            _buildInfoColumn(theme, Icons.settings_ethernet, 'Standard', networkInfo.wifiVersion.split(' ').first),
+                            Container(width: 1, height: 30, color: theme.colorScheme.onSurface.withOpacity(0.1)),
+                            _buildInfoColumn(theme, Icons.router, 'IP', networkInfo.ipVersion ?? 'IPv4'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoColumn(ThemeData theme, IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 12, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 4),
+            Text(
+              label.toUpperCase(),
+              style: GoogleFonts.inter(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.rajdhani(
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
+      ],
     );
   }
 
