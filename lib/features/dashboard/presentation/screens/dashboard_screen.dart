@@ -319,7 +319,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           icon: Icons.cell_tower,
           label: 'ISP',
           value: ispShort,
-          trailingWidget: IspLogoWidget(domain: networkInfo.ispDomain, size: 20),
+          trailingWidget: IspLogoWidget(domain: networkInfo.ispDomain, ispName: networkInfo.ispName, size: 20),
         ),
         DetailCard(icon: Icons.speed, label: 'Band', value: _bandFromFrequency(networkInfo.frequency)),
         DetailCard(icon: Icons.dns, label: 'IP Version', value: networkInfo.ipVersion ?? "IPv4"),
@@ -338,6 +338,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         children: [
           IspLogoWidget(
             domain: networkInfo.ispDomain,
+            ispName: networkInfo.ispName,
             size: 32,
             fallbackWidget: Icon(Icons.business, color: theme.colorScheme.primary, size: 32),
           ),
