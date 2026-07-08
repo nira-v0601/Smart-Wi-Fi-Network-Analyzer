@@ -23,8 +23,10 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(
           'Settings',
-          style: theme.textTheme.headlineSmall?.copyWith(
+          style: GoogleFonts.rajdhani(
+            fontSize: 24,
             fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -34,94 +36,120 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
         children: [
           _buildSectionHeader(theme, 'APPEARANCE'),
-          ListTile(
-            leading: Icon(Icons.palette, color: theme.colorScheme.onSurfaceVariant),
-            title: Text('Dark Mode', style: TextStyle(color: theme.colorScheme.onSurface)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('App theme', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
+          _buildCard(
+            theme: theme,
+            child: ListTile(
+              leading: Icon(Icons.palette, color: theme.colorScheme.onSurfaceVariant),
+              title: Text('Dark Mode', style: TextStyle(color: theme.colorScheme.onSurface)),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('App theme', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                    decoration: BoxDecoration(
+                      color: theme.scaffoldBackgroundColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      isDark ? 'Dark mode is ON' : 'Light mode is ON',
+                      style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant),
+                    ),
                   ),
-                  child: Text(
-                    isDark ? 'Dark mode is ON' : 'Light mode is ON',
-                    style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                ),
-              ],
+                ],
+              ),
+              trailing: Switch(
+                value: isDark,
+                onChanged: (val) {
+                  ref.read(themeNotifierProvider.notifier).toggleTheme(val);
+                },
+                activeTrackColor: theme.colorScheme.primary.withAlpha(100),
+                activeThumbColor: theme.colorScheme.primary.withAlpha(150),
+              ),
             ),
-            trailing: Switch(
-              value: isDark,
-              onChanged: (val) {
-                ref.read(themeNotifierProvider.notifier).toggleTheme(val);
-              },
-              activeTrackColor: theme.colorScheme.primary.withAlpha(100),
-              activeThumbColor: theme.colorScheme.primary.withAlpha(150),
-            ),
-            contentPadding: EdgeInsets.zero,
           ),
           const SizedBox(height: 24),
 
           _buildSectionHeader(theme, 'SPEED TEST'),
-          ListTile(
-            leading: Icon(Icons.history, color: theme.colorScheme.onSurfaceVariant),
-            title: Text('Test History', style: TextStyle(color: theme.colorScheme.onSurface)),
-            subtitle: Text('View past speed test results', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
-            contentPadding: EdgeInsets.zero,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SpeedTestHistoryScreen()),
-              );
-            },
+          _buildCard(
+            theme: theme,
+            child: ListTile(
+              leading: Icon(Icons.history, color: theme.colorScheme.onSurfaceVariant),
+              title: Text('Test History', style: TextStyle(color: theme.colorScheme.onSurface)),
+              subtitle: Text('View past speed test results', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+              trailing: Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SpeedTestHistoryScreen()),
+                );
+              },
+            ),
           ),
           const SizedBox(height: 24),
 
           _buildSectionHeader(theme, 'NETWORK'),
-          ListTile(
-            leading: Icon(Icons.wifi_find, color: theme.colorScheme.onSurfaceVariant),
-            title: Text('Advanced Network Details', style: TextStyle(color: theme.colorScheme.onSurface)),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
-            contentPadding: EdgeInsets.zero,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AdvancedNetworkScreen()),
-              );
-            },
+          _buildCard(
+            theme: theme,
+            child: ListTile(
+              leading: Icon(Icons.wifi_find, color: theme.colorScheme.onSurfaceVariant),
+              title: Text('Advanced Network Details', style: TextStyle(color: theme.colorScheme.onSurface)),
+              trailing: Icon(Icons.arrow_forward_ios, size: 16, color: theme.colorScheme.onSurfaceVariant),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdvancedNetworkScreen()),
+                );
+              },
+            ),
           ),
           const SizedBox(height: 24),
 
           _buildSectionHeader(theme, 'ABOUT'),
-          ListTile(
-            leading: Icon(Icons.info_outline, color: theme.colorScheme.onSurfaceVariant),
-            title: Text('App Version', style: TextStyle(color: theme.colorScheme.onSurface)),
-            trailing: Text(
-              'v1.0.0',
-              style: GoogleFonts.rajdhani(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
+          _buildCard(
+            theme: theme,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.info_outline, color: theme.colorScheme.onSurfaceVariant),
+                  title: Text('App Version', style: TextStyle(color: theme.colorScheme.onSurface)),
+                  trailing: Text(
+                    'v1.0.0',
+                    style: GoogleFonts.rajdhani(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
+                  ),
+                ),
+                Divider(height: 1, color: theme.colorScheme.outlineVariant.withAlpha(100)),
+                ListTile(
+                  leading: Icon(Icons.code, color: theme.colorScheme.onSurfaceVariant),
+                  title: Text('Built With', style: TextStyle(color: theme.colorScheme.onSurface)),
+                  trailing: Text('Flutter + Gemini', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
+                ),
+                Divider(height: 1, color: theme.colorScheme.outlineVariant.withAlpha(100)),
+                ListTile(
+                  leading: Icon(Icons.developer_mode, color: theme.colorScheme.onSurfaceVariant),
+                  title: Text('Developer', style: TextStyle(color: theme.colorScheme.onSurface)),
+                  subtitle: Text('GTU BE IT Student', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                ),
+              ],
             ),
-            contentPadding: EdgeInsets.zero,
-          ),
-          ListTile(
-            leading: Icon(Icons.code, color: theme.colorScheme.onSurfaceVariant),
-            title: Text('Built With', style: TextStyle(color: theme.colorScheme.onSurface)),
-            trailing: Text('Flutter + Gemini', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
-            contentPadding: EdgeInsets.zero,
-          ),
-          ListTile(
-            leading: Icon(Icons.developer_mode, color: theme.colorScheme.onSurfaceVariant),
-            title: Text('Developer', style: TextStyle(color: theme.colorScheme.onSurface)),
-            subtitle: Text('GTU BE IT Student', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-            contentPadding: EdgeInsets.zero,
           ),
         ].animate(interval: 50.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOutQuad),
       ),
+    );
+  }
+
+  Widget _buildCard({required ThemeData theme, required Widget child}) {
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.colorScheme.outlineVariant.withAlpha(100)),
+      ),
+      color: theme.colorScheme.surfaceContainer,
+      clipBehavior: Clip.antiAlias,
+      child: child,
     );
   }
 
