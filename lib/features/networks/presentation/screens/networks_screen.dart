@@ -73,7 +73,7 @@ class _NetworksScreenState extends ConsumerState<NetworksScreen> with SingleTick
                   Text(
                     'Nearby Networks',
                     style: GoogleFonts.rajdhani(
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                       fontSize: 22,
                     ),

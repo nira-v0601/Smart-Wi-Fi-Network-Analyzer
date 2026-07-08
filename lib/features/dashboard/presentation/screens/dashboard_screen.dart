@@ -132,7 +132,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Text(
               'Smart Wi-Fi Network Analyzer',
               style: GoogleFonts.rajdhani(
-                color: theme.colorScheme.primary,
+                color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
               ),
@@ -161,7 +161,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildHeroCard(ThemeData theme, dynamic networkInfo) {
     final signalColor = SignalColors.fromRssi(networkInfo.rssi);
     
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
@@ -183,7 +185,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         borderRadius: BorderRadius.circular(28),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
@@ -208,10 +212,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Positioned(
                   right: -30,
                   bottom: -20,
-                  child: Icon(
-                    Icons.wifi,
-                    size: 180,
-                    color: signalColor.withOpacity(0.06),
+                  child: TweenAnimationBuilder<Color?>(
+                    tween: ColorTween(end: signalColor.withOpacity(0.06)),
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                    builder: (context, color, child) {
+                      return Icon(
+                        Icons.wifi,
+                        size: 180,
+                        color: color,
+                      );
+                    },
                   ),
                 ),
                 Padding(
@@ -304,20 +315,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Container(
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeInOut,
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
                               color: signalColor.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(color: signalColor.withOpacity(0.3)),
                             ),
-                            child: Text(
-                              networkInfo.signalQuality.toUpperCase(),
+                            child: AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeInOut,
                               style: GoogleFonts.inter(
                                 color: signalColor,
                                 fontWeight: FontWeight.w900,
                                 fontSize: 13,
                                 letterSpacing: 1.5,
+                              ),
+                              child: Text(
+                                networkInfo.signalQuality.toUpperCase(),
                               ),
                             ),
                           ),

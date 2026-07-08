@@ -57,7 +57,28 @@ class _SignalScreenState extends ConsumerState<SignalScreen> with SingleTickerPr
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Signal Strength',
+                    style: GoogleFonts.rajdhani(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.refresh, color: theme.colorScheme.primary),
+                    onPressed: () {
+                      ref.read(signalViewModelProvider.notifier).startMonitoring();
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               _buildLiveMeter(theme, state, signalColor, qualityLabel),
               const SizedBox(height: 32),
               _buildSignalBar(theme, state),
