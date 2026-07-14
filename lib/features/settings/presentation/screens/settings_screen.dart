@@ -145,9 +145,8 @@ class SettingsScreen extends ConsumerWidget {
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant.withAlpha(100)),
       ),
-      color: theme.colorScheme.surfaceContainer,
+      color: theme.colorScheme.surface,
       clipBehavior: Clip.antiAlias,
       child: child,
     );
