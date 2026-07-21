@@ -168,13 +168,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: signalColor.withOpacity(0.15),
+            color: signalColor.withValues(alpha: 0.15),
             blurRadius: 30,
             spreadRadius: 5,
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.1),
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
             blurRadius: 20,
             spreadRadius: -5,
             offset: const Offset(0, -5),
@@ -192,7 +192,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: theme.colorScheme.onSurface.withOpacity(0.15), // glass highlight
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.15), // glass highlight
                 width: 1.5,
               ),
               gradient: LinearGradient(
@@ -200,9 +200,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 end: Alignment.bottomRight,
                 stops: const [0.0, 0.5, 1.0],
                 colors: [
-                  theme.colorScheme.primary.withOpacity(0.25),
-                  theme.colorScheme.surface.withOpacity(0.5),
-                  signalColor.withOpacity(0.15),
+                  theme.colorScheme.primary.withValues(alpha: 0.25),
+                  theme.colorScheme.surface.withValues(alpha: 0.5),
+                  signalColor.withValues(alpha: 0.15),
                 ],
               ),
             ),
@@ -213,7 +213,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   right: -30,
                   bottom: -20,
                   child: TweenAnimationBuilder<Color?>(
-                    tween: ColorTween(end: signalColor.withOpacity(0.06)),
+                    tween: ColorTween(end: signalColor.withValues(alpha: 0.06)),
                     duration: const Duration(milliseconds: 500),
                     curve: Curves.easeInOut,
                     builder: (context, color, child) {
@@ -239,7 +239,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withOpacity(0.2),
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(Icons.wifi_tethering, color: theme.colorScheme.primary, size: 20),
@@ -263,9 +263,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.surface.withOpacity(0.4),
+                              color: theme.colorScheme.surface.withValues(alpha: 0.4),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.1)),
+                              border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
                             ),
                             child: Row(
                               children: [
@@ -320,9 +320,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             curve: Curves.easeInOut,
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
-                              color: signalColor.withOpacity(0.15),
+                              color: signalColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: signalColor.withOpacity(0.3)),
+                              border: Border.all(color: signalColor.withValues(alpha: 0.3)),
                             ),
                             child: AnimatedDefaultTextStyle(
                               duration: const Duration(milliseconds: 500),
@@ -347,17 +347,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surface.withOpacity(0.4),
+                          color: theme.colorScheme.surface.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.05)),
+                          border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.05)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             _buildInfoColumn(theme, Icons.speed, 'Band', networkInfo.band),
-                            Container(width: 1, height: 30, color: theme.colorScheme.onSurface.withOpacity(0.1)),
+                            Container(width: 1, height: 30, color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
                             _buildInfoColumn(theme, Icons.settings_ethernet, 'Standard', networkInfo.wifiVersion),
-                            Container(width: 1, height: 30, color: theme.colorScheme.onSurface.withOpacity(0.1)),
+                            Container(width: 1, height: 30, color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
                             _buildInfoColumn(theme, Icons.router, 'IP Version', networkInfo.ipVersion ?? 'IPv4'),
                           ],
                         ),

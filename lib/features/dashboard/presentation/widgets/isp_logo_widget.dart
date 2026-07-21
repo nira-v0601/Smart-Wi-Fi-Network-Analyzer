@@ -96,7 +96,7 @@ class _IspLogoWidgetState extends State<IspLogoWidget> {
               padding: EdgeInsets.all(widget.size * 0.25),
               child: CircularProgressIndicator(
                 strokeWidth: 2.0,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
               ),
             ),
           );

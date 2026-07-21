@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../dashboard/presentation/view_models/dashboard_view_model.dart';
-import '../../../dashboard/data/models/network_info_model.dart';
 import '../../../speedtest/data/models/speed_result_model.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
